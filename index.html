@@ -1,157 +1,120 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SkyBurst</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <style>
+    body {
+      background-color: #000;
+      color: white;
+      text-align: center;
+    }
+    .coin-option {
+      margin: 5px;
+      font-size: 18px;
+    }
+    #gameArea {
+      height: 300px;
+      background: url('https://i.imgur.com/VB4Jmnf.png') center center no-repeat;
+      background-size: contain;
+      margin: 20px 0;
+    }
+  </style>
 </head>
 <body>
-  <h1>SkyBurst</h1>
+  <div class="container py-4">
+    <h2 id="logo" class="text-start">SkyBurst</h2>
+    <div class="d-flex justify-content-between">
+      <h4>Balance: <span id="coinBalance">0</span> coins</h4>
+      <button class="btn btn-warning" onclick="showWithdrawForm()">Withdraw</button>
+    </div><div id="gameArea"></div>
 
-  <form id="registerForm">
-    <h2>Register / Log In</h2>
-    <input type="text" id="username" placeholder="Username" required />
-    <input type="text" id="phone" placeholder="Phone Number" required />
-    <input type="password" id="password" placeholder="Password" required />
-    <button type="submit">Continue</button>
-  </form>
-
-  <div class="dashboard hidden" id="dashboard">
-    <h2>Welcome, <span id="userDisplay"></span></h2>
-    <p>Coin Balance: <span id="coinBalance">0</span></p>
-    <button onclick="playGame()">Play Game</button>
-    <button onclick="requestWithdrawal()">Withdraw</button>
-    <button onclick="rechargeAccount()">Recharge</button>
-    <a href="https://wa.me/254797416633" class="support-link" target="_blank">📞 WhatsApp Support</a>
+<div class="row mt-3">
+  <div class="col-6">
+    <button class="btn btn-success w-100" onclick="cashIn()">Cash In</button>
   </div>
-
-  <div class="game hidden" id="game">
-    <h2>SkyBurst Game</h2>
-    <div id="shipAnimation">🛸 Landed</div>
-    <p>Select your cash-in amount:</p>
-    <div>
-      <button onclick="addCashIn(10)">10</button>
-      <button onclick="addCashIn(50)">50</button>
-      <button onclick="addCashIn(100)">100</button>
-      <button onclick="addCashIn(500)">500</button>
-      <button onclick="addCashIn(1000)">1000</button>
-    </div>
-    <p>Selected: <span id="cashInAmount">0</span> coins</p>
-    <button onclick="confirmCashIn()">💰 Cash In</button>
-    <p id="gameResult"></p>
+  <div class="col-6">
+    <button class="btn btn-danger w-100" onclick="cashOut()">Cash Out</button>
   </div>
+</div>
 
-  <script>
-    let currentUser = null;
-    let cashIn = 0;
-    let inFlight = false;
-    let canCashIn = true;
+<div class="mt-3">
+  <button class="btn btn-outline-light coin-option" onclick="addCoins(10)">10</button>
+  <button class="btn btn-outline-light coin-option" onclick="addCoins(30)">30</button>
+  <button class="btn btn-outline-light coin-option" onclick="addCoins(50)">50</button>
+  <button class="btn btn-outline-light coin-option" onclick="addCoins(100)">100</button>
+  <button class="btn btn-outline-light coin-option" onclick="addCoins(500)">500</button>
+  <button class="btn btn-outline-light coin-option" onclick="addCoins(1000)">1000</button>
+</div>
 
-    document.getElementById("registerForm").addEventListener("submit", async function (e) {
-      e.preventDefault();
-      const username = document.getElementById("username").value;
-      const phone = document.getElementById("phone").value;
-      const password = document.getElementById("password").value;
+<div id="withdrawForm" class="mt-4" style="display: none;">
+  <h5>Withdraw Coins</h5>
+  <input type="number" id="withdrawAmount" class="form-control" placeholder="Enter amount to withdraw" />
+  <button class="btn btn-primary mt-2" onclick="submitWithdraw()">Submit Withdraw</button>
+</div>
 
-      const res = await fetch("/auth", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, phone, password })
+  </div>  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>  <script>
+    const supabase = createClient(
+      'https://omcaquhsmeqfhxpusawu.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9tY2FxdWhzbWVxZmh4cHVzYXd1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMyMTE2ODIsImV4cCI6MjA2ODc4NzY4Mn0.efl5MQ-lbY6kkeMujJQ8NDTLdc_7r_bkTj_AZzwcj4Y'
+    );
+
+    const telegramBotToken = '7859896649:AAE4xWMYhE1wsSVqpbBNUC6MXYA2zqGvgdA';
+    const adminChatId = 'YOUR_TELEGRAM_CHAT_ID'; // Replace manually
+
+    let selectedAmount = 0;
+    let currentUser = 'user123'; // Change this dynamically later
+
+    async function updateBalanceDisplay() {
+      const { data, error } = await supabase.from('skyburst_users').select('coins').eq('username', currentUser).single();
+      if (data) {
+        document.getElementById('coinBalance').textContent = data.coins;
+      }
+    }
+
+    function addCoins(amount) {
+      selectedAmount += amount;
+      alert(You selected ${selectedAmount} coins to cash in.);
+    }
+
+    async function cashIn() {
+      const { data, error } = await supabase.rpc('cash_in', { username_input: currentUser, amount_input: selectedAmount });
+      selectedAmount = 0;
+      updateBalanceDisplay();
+    }
+
+    async function cashOut() {
+      alert('Cash out feature coming soon.');
+    }
+
+    function showWithdrawForm() {
+      document.getElementById('withdrawForm').style.display = 'block';
+    }
+
+    async function submitWithdraw() {
+      const amount = parseInt(document.getElementById('withdrawAmount').value);
+      if (!amount || amount <= 0) return alert('Enter a valid amount.');
+
+      const { data, error } = await supabase.from('skyburst_users').select('coins, phone').eq('username', currentUser).single();
+
+      if (data.coins < amount) return alert('Not enough balance.');
+
+      await supabase.from('skyburst_users').update({ coins: data.coins - amount }).eq('username', currentUser);
+      updateBalanceDisplay();
+
+      fetch(https://api.telegram.org/bot${telegramBotToken}/sendMessage, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: adminChatId,
+          text: 📤 New Withdrawal Request\n\n👤 Username: ${currentUser}\n💳 Amount: ${amount} coins\n📞 Phone: ${data.phone}
+        })
       });
 
-      const data = await res.json();
-      if (data.success) {
-        currentUser = data.user;
-        document.getElementById("registerForm").classList.add("hidden");
-        document.getElementById("dashboard").classList.remove("hidden");
-        document.getElementById("userDisplay").textContent = currentUser.username;
-        document.getElementById("coinBalance").textContent = currentUser.coins;
-      } else {
-        alert(data.message);
-      }
-    });
-
-    function playGame() {
-      if (currentUser.coins <= 0) {
-        alert("You have no coins! Recharge to play.");
-        return;
-      }
-
-      document.getElementById("dashboard").classList.add("hidden");
-      document.getElementById("game").classList.remove("hidden");
-      document.getElementById("shipAnimation").textContent = "🛸 Landed";
-      document.getElementById("cashInAmount").textContent = "0";
-      cashIn = 0;
-      canCashIn = true;
-
-      setTimeout(() => {
-        takeOff();
-      }, 5000); // 5 seconds for players to cash in
+      alert('Withdrawal request sent! You will be credited shortly.');
     }
 
-    function addCashIn(amount) {
-      if (!canCashIn) return;
-      cashIn += amount;
-      document.getElementById("cashInAmount").textContent = cashIn;
-    }
-
-    function confirmCashIn() {
-      if (!canCashIn || inFlight) {
-        alert("Cannot cash in now.");
-        return;
-      }
-      if (cashIn > currentUser.coins) {
-        alert("Not enough coins. Recharge to play more.");
-        return;
-      }
-      currentUser.coins -= cashIn;
-      document.getElementById("coinBalance").textContent = currentUser.coins;
-      alert(You have cashed in ${cashIn} coins);
-    }
-
-    function takeOff() {
-      if (cashIn <= 0) {
-        document.getElementById("gameResult").textContent = "You missed this round.";
-        return;
-      }
-
-      inFlight = true;
-      canCashIn = false;
-      document.getElementById("shipAnimation").textContent = "🚀 Taking off...";
-
-      // Simulate flying and crashing
-      setTimeout(() => {
-        let won = Math.random() < 0.5;
-        if (won) {
-          let reward = cashIn * 2;
-          currentUser.coins += reward;
-          document.getElementById("gameResult").textContent = 🎉 You won ${reward} coins!;
-        } else {
-          document.getElementById("gameResult").textContent = 💥 You lost ${cashIn} coins!;
-        }
-
-        document.getElementById("coinBalance").textContent = currentUser.coins;
-        document.getElementById("shipAnimation").textContent = "💥 Crashed!";
-        cashIn = 0;
-        inFlight = false;
-
-        // Allow new cash-in after 5s
-        setTimeout(() => {
-          document.getElementById("gameResult").textContent = "";
-          document.getElementById("shipAnimation").textContent = "🛸 Landed";
-          canCashIn = true;
-        }, 5000);
-      }, 4000); // Game round duration
-    }
-
-    function rechargeAccount() {
-      alert("Please send M-PESA to 0797416633 and contact admin on WhatsApp.");
-    }
-
-    function requestWithdrawal() {
-      alert("Withdrawals are manual. Contact admin via WhatsApp.");
-    }
-  </script>
-</body>
+    updateBalanceDisplay();
+  </script></body>
 </html>
