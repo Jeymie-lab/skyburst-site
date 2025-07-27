@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>SkyBurst</title>
   <link rel="stylesheet" href="style.css">
 </head>
@@ -28,13 +28,25 @@
 
   <div class="game hidden" id="game">
     <h2>SkyBurst Game</h2>
-    <p>Click to try your luck!</p>
-    <button onclick="simulateGame()">Play</button>
+    <div id="shipAnimation">🛸 Landed</div>
+    <p>Select your cash-in amount:</p>
+    <div>
+      <button onclick="addCashIn(10)">10</button>
+      <button onclick="addCashIn(50)">50</button>
+      <button onclick="addCashIn(100)">100</button>
+      <button onclick="addCashIn(500)">500</button>
+      <button onclick="addCashIn(1000)">1000</button>
+    </div>
+    <p>Selected: <span id="cashInAmount">0</span> coins</p>
+    <button onclick="confirmCashIn()">💰 Cash In</button>
     <p id="gameResult"></p>
   </div>
 
   <script>
     let currentUser = null;
+    let cashIn = 0;
+    let inFlight = false;
+    let canCashIn = true;
 
     document.getElementById("registerForm").addEventListener("submit", async function (e) {
       e.preventDefault();
@@ -47,6 +59,7 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, phone, password })
       });
+
       const data = await res.json();
       if (data.success) {
         currentUser = data.user;
@@ -60,21 +73,84 @@
     });
 
     function playGame() {
+      if (currentUser.coins <= 0) {
+        alert("You have no coins! Recharge to play.");
+        return;
+      }
+
       document.getElementById("dashboard").classList.add("hidden");
       document.getElementById("game").classList.remove("hidden");
+      document.getElementById("shipAnimation").textContent = "🛸 Landed";
+      document.getElementById("cashInAmount").textContent = "0";
+      cashIn = 0;
+      canCashIn = true;
+
+      setTimeout(() => {
+        takeOff();
+      }, 5000); // 5 seconds for players to cash in
+    }
+
+    function addCashIn(amount) {
+      if (!canCashIn) return;
+      cashIn += amount;
+      document.getElementById("cashInAmount").textContent = cashIn;
+    }
+
+    function confirmCashIn() {
+      if (!canCashIn || inFlight) {
+        alert("Cannot cash in now.");
+        return;
+      }
+      if (cashIn > currentUser.coins) {
+        alert("Not enough coins. Recharge to play more.");
+        return;
+      }
+      currentUser.coins -= cashIn;
+      document.getElementById("coinBalance").textContent = currentUser.coins;
+      alert(You have cashed in ${cashIn} coins);
+    }
+
+    function takeOff() {
+      if (cashIn <= 0) {
+        document.getElementById("gameResult").textContent = "You missed this round.";
+        return;
+      }
+
+      inFlight = true;
+      canCashIn = false;
+      document.getElementById("shipAnimation").textContent = "🚀 Taking off...";
+
+      // Simulate flying and crashing
+      setTimeout(() => {
+        let won = Math.random() < 0.5;
+        if (won) {
+          let reward = cashIn * 2;
+          currentUser.coins += reward;
+          document.getElementById("gameResult").textContent = 🎉 You won ${reward} coins!;
+        } else {
+          document.getElementById("gameResult").textContent = 💥 You lost ${cashIn} coins!;
+        }
+
+        document.getElementById("coinBalance").textContent = currentUser.coins;
+        document.getElementById("shipAnimation").textContent = "💥 Crashed!";
+        cashIn = 0;
+        inFlight = false;
+
+        // Allow new cash-in after 5s
+        setTimeout(() => {
+          document.getElementById("gameResult").textContent = "";
+          document.getElementById("shipAnimation").textContent = "🛸 Landed";
+          canCashIn = true;
+        }, 5000);
+      }, 4000); // Game round duration
     }
 
     function rechargeAccount() {
-      alert("Please send your recharge to M-PESA: 0797416633 and WhatsApp for verification.");
+      alert("Please send M-PESA to 0797416633 and contact admin on WhatsApp.");
     }
 
     function requestWithdrawal() {
-      alert("Withdrawal requests will be sent to the admin for manual processing.");
-    }
-
-    function simulateGame() {
-      const result = Math.random() < 0.5 ? "You Lost!" : "You Won! +10 coins";
-      document.getElementById("gameResult").textContent = result;
+      alert("Withdrawals are manual. Contact admin via WhatsApp.");
     }
   </script>
 </body>
