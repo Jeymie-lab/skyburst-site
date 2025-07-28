@@ -2,155 +2,234 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>SkyBurst Game</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600&display=swap" rel="stylesheet">
   <style>
     body {
-      background: linear-gradient(to top, #020024, #090979, #00d4ff);
       margin: 0;
-      font-family: Arial, sans-serif;
+      font-family: 'Orbitron', sans-serif;
+      background: linear-gradient(to top, #000010, #00111c);
+      color: white;
       overflow: hidden;
+    }
+    #gameContainer {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      height: 100vh;
+      padding: 1rem;
+      gap: 1rem;
+    }
+    #leftPanel {
       position: relative;
+      background-color: #0a0a1a;
+      border-radius: 10px;
+      padding: 1rem;
     }
-    #header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: #111;
-      color: #fff;
-      padding: 10px 20px;
-    }
-    #coins {
-      font-size: 18px;
-    }
-    #controls {
-      position: absolute;
-      bottom: 20px;
-      width: 100%;
+    #rightPanel {
+      background-color: #111;
+      border-radius: 10px;
+      padding: 1rem;
       display: flex;
       flex-direction: column;
-      align-items: center;
-      gap: 10px;
+      justify-content: space-between;
     }
-    #coin-buttons button {
-      margin: 3px;
-      padding: 10px 15px;
-      font-size: 16px;
-      border-radius: 10px;
-      border: none;
-      cursor: pointer;
-      background: gold;
+    .button-row {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 1rem;
     }
-    #cash-buttons button {
-      margin: 5px;
-      padding: 10px 20px;
-      border: none;
-      font-size: 16px;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-    #cash-in { background: green; color: #fff; }
-    #cash-out { background: red; color: #fff; }
-
-    #game-area {
-      width: 100%;
-      height: calc(100vh - 60px);
-      position: relative;
-    }
-
-    #ship {
-      width: 80px;
-      position: absolute;
-      bottom: 100px;
-      left: -100px;
-      transition: transform 0.5s ease;
-    }
-
-    #message {
-      position: absolute;
-      top: 70px;
-      width: 100%;
-      text-align: center;
+    button {
+      font-family: inherit;
+      background-color: #2196f3;
       color: white;
-      font-size: 24px;
-      font-weight: bold;
+      border: none;
+      border-radius: 5px;
+      padding: 0.7rem;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0d8ddb;
+    }
+    #spaceship {
+      position: absolute;
+      left: 40%;
+      bottom: 50px;
+      width: 100px;
+      transition: bottom 0.5s linear;
+    }
+    #balance, #cashinAmount {
+      font-size: 1.2rem;
+      margin-top: 0.5rem;
+    }
+    #activityLog {
+      height: 200px;
+      overflow-y: auto;
+      background: #222;
+      padding: 0.5rem;
+      border-radius: 5px;
+      font-size: 0.9rem;
+    }
+    #referralSection, #supportInfo {
+      margin-top: 1rem;
+      font-size: 0.85rem;
+      color: #aaa;
     }
   </style>
 </head>
 <body>
 
-  <div id="header">
-    <div><strong>SkyBurst</strong></div>
-    <div id="coins">Coins: 0</div>
-  </div>
+<div id="gameContainer">
+  <div id="leftPanel">
+    <img id="spaceship" src="spaceship.png" alt="Spaceship">
+    <div id="balance">Balance: 0 coins</div>
+    <div id="cashinAmount">Selected: 0 coins</div>
 
-  <div id="game-area">
-    <img id="ship" src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Spaceship_simple_cartoon.svg/800px-Spaceship_simple_cartoon.svg.png" alt="Ship" />
-    <div id="message"></div>
-  </div>
-
-  <div id="controls">
-    <div id="coin-buttons">
-      <button onclick="playGame(10)">10</button>
-      <button onclick="playGame(30)">30</button>
-      <button onclick="playGame(50)">50</button>
-      <button onclick="playGame(100)">100</button>
-      <button onclick="playGame(500)">500</button>
-      <button onclick="playGame(1000)">1000</button>
+    <div class="button-row">
+      <button onclick="selectCash(10)">10</button>
+      <button onclick="selectCash(30)">30</button>
+      <button onclick="selectCash(50)">50</button>
     </div>
-    <div id="cash-buttons">
-      <button id="cash-in" onclick="cashIn()">Cash In</button>
-      <button id="cash-out" onclick="cashOut()">Cash Out</button>
+    <div class="button-row">
+      <button onclick="selectCash(100)">100</button>
+      <button onclick="selectCash(500)">500</button>
+    </div>
+    <div class="button-row">
+      <button onclick="cashIn()">💸 Cash In</button>
+      <button onclick="cashOut()">🪂 Cash Out</button>
+    </div>
+    <div class="button-row">
+      <button onclick="recharge()">🔄 Recharge</button>
+      <button onclick="withdraw()">📤 Withdraw</button>
     </div>
   </div>
 
-  <script>
-    let balance = 0;
-    let ship = document.getElementById('ship');
-    let message = document.getElementById('message');
-    let coinsDisplay = document.getElementById('coins');
+  <div id="rightPanel">
+    <div>
+      <h3>Live Players Activity</h3>
+      <div id="activityLog"></div>
+    </div>
 
-    function updateCoins() {
-      coinsDisplay.innerText = Coins: ${balance};
+    <div id="referralSection">
+      💬 Referral Link: <br>
+      <input type="text" value="https://yoursite.com?ref=username" readonly onclick="this.select()"><br>
+      ✅ You get <b>20 coins</b> per referral, Admin gets 5 coins
+    </div>
+
+    <div id="supportInfo">
+      📞 Support: +254 797 416 633 <br>
+      Telegram: <a href="https://t.me/yourbot" target="_blank">@yourbot</a>
+    </div>
+  </div>
+</div>
+
+<audio id="launchSound" src="launch.mp3"></audio>
+<audio id="explosionSound" src="explosion.mp3"></audio>
+<audio id="cashoutSound" src="cashout.mp3"></audio>
+
+<script>
+let balance = 0;
+let selectedCash = 0;
+let ship = document.getElementById("spaceship");
+let flying = false;
+let interval;
+let altitude = 50;
+
+function selectCash(amount) {
+  if (flying) return;
+  selectedCash = amount;
+  document.getElementById("cashinAmount").textContent = Selected: ${selectedCash} coins;
+}
+
+function cashIn() {
+  if (flying || selectedCash === 0) return alert("Wait for next round or select amount!");
+  flying = true;
+  altitude = 50;
+  playSound("launchSound");
+
+  interval = setInterval(() => {
+    altitude += Math.random() * 20;
+    ship.style.bottom = ${altitude}px;
+
+    if (Math.random() < 0.01 || altitude > 600) {
+      explode();
     }
+  }, 300);
 
-    function playGame(bet) {
-      if (bet > balance) {
-        alert("Not enough coins!");
-        return;
-      }
+  logActivity(Player cashed in ${selectedCash} coins);
+  notifyTelegram(💰 New Cash In: ${selectedCash} coins);
+}
 
-      message.innerText = "";
-      ship.style.left = "-100px";
-      ship.style.transition = "none";
+function cashOut() {
+  if (!flying) return;
 
-      setTimeout(() => {
-        ship.style.transition = "left 3s linear";
-        ship.style.left = "100%";
+  clearInterval(interval);
+  flying = false;
+  balance += selectedCash * (1 + Math.random());
+  document.getElementById("balance").textContent = Balance: ${Math.floor(balance)} coins;
+  selectedCash = 0;
+  playSound("cashoutSound");
+  shipJump();
+  logActivity("🪂 Player cashed out before explosion");
+}
 
-        setTimeout(() => {
-          const win = Math.random() < 0.5;
-          if (win) {
-            balance += bet;
-            message.innerText = 🎉 You WON ${bet} coins!;
-          } else {
-            balance -= bet;
-            message.innerText = 😢 You LOST ${bet} coins.;
-          }
-          updateCoins();
-        }, 3000);
-      }, 100);
-    }
+function explode() {
+  clearInterval(interval);
+  flying = false;
+  playSound("explosionSound");
+  ship.style.bottom = "50px";
+  logActivity("💥 Ship exploded! Player lost cash in");
+}
 
-    function cashIn() {
-      alert("Send money to M-PESA: 0797416633\nYou'll be credited shortly.");
-    }
+function shipJump() {
+  ship.src = "parachute.png";
+  setTimeout(() => {
+    ship.src = "spaceship.png";
+    ship.style.bottom = "50px";
+  }, 2000);
+}
 
-    function cashOut() {
-      alert("Withdraw request sent. Wait for manual approval.");
-    }
+function recharge() {
+  const amount = prompt("Enter recharge amount:");
+  if (amount && !flying) {
+    notifyTelegram(💵 Recharge Request: ${amount} from user);
+    alert("Send to MPESA: 0797416633. You'll be credited shortly.");
+  }
+}
 
-    updateCoins();
-  </script>
+function withdraw() {
+  const amount = prompt("Withdraw amount:");
+  if (amount <= balance) {
+    balance -= amount;
+    document.getElementById("balance").textContent = Balance: ${Math.floor(balance)} coins;
+    notifyTelegram(📤 Withdraw Request: ${amount} from user);
+    alert("Request sent! Admin will approve shortly.");
+  } else {
+    alert("Insufficient balance!");
+  }
+}
+
+function logActivity(msg) {
+  const log = document.getElementById("activityLog");
+  const time = new Date().toLocaleTimeString();
+  log.innerHTML = [${time}] ${msg}<br> + log.innerHTML;
+}
+
+function playSound(id) {
+  document.getElementById(id).play();
+}
+
+function notifyTelegram(msg) {
+  fetch(https://api.telegram.org/bot7859896649:AAE4xWMYhE1wsSVqpbBNUC6MXYA2zqGvgdA/sendMessage, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      chat_id: "6825228721",
+      text: msg
+    })
+  });
+}
+</script>
 
 </body>
 </html>
