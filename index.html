@@ -1,39 +1,45 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Login - SkyBurst</title>
+  <meta charset="UTF-8" />
+  <title>Skyburst Game - Login</title>
 </head>
 <body>
-  <h2>Login to SkyBurst</h2>
-  <input type="text" id="username" placeholder="Username"><br>
-  <input type="password" id="password" placeholder="Password"><br>
-  <button onclick="login()">Login</button>
-
+  <h2>Login to Skyburst Game</h2>
+  <form id="login-form">
+    <input type="text" id="login-username" placeholder="Username" required /><br />
+    <input type="password" id="login-password" placeholder="Password" required /><br />
+    <button type="submit">Login</button>
+  </form>
   <p>Don't have an account? <a href="register.html">Register here</a></p>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-  <script>
-    const supabaseUrl = 'https://omcaquhsmeqfhxpusawu.supabase.co';
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9tY2FxdWhzbWVxZmh4cHVzYXd1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMyMTE2ODIsImV4cCI6MjA2ODc4NzY4Mn0.efl5MQ-lbY6kkeMujJQ8NDTLdc_7r_bkTj_AZzwcj4Y';
-    const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
-    async function login() {
-      const username = document.getElementById('username').value;
-      const password = document.getElementById('password').value;
+    const supabase = createClient(
+      'https://omcaquhsmeqfhxpusawu.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9tY2FxdWhzbWVxZmh4cHVzYXd1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMyMTE2ODIsImV4cCI6MjA2ODc4NzY4Mn0.efl5MQ-lbY6kkeMujJQ8NDTLdc_7r_bkTj_AZzwcj4Y'
+    );
+
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const username = document.getElementById('login-username').value;
+      const password = document.getElementById('login-password').value;
 
       const { data, error } = await supabase
         .from('skyburst_users')
         .select('*')
         .eq('username', username)
-        .eq('password', password);
+        .eq('password', password)
+        .single();
 
-      if (error || data.length === 0) {
-        alert('Invalid credentials!');
+      if (data) {
+        localStorage.setItem('username', username);
+        window.location.href = "game.html";
       } else {
-        localStorage.setItem('skyburstUser', JSON.stringify(data[0]));
-        window.location.href = 'index.html';
+        alert("Invalid username or password.");
       }
-    }
+    });
   </script>
 </body>
 </html>
