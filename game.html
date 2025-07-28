@@ -6,196 +6,208 @@
   <style>
     body {
       margin: 0;
-      font-family: 'Arial', sans-serif;
-      background: black;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to bottom, #000428, #004e92);
       color: white;
-      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
     header {
-      background: #111;
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
       padding: 10px;
-      text-align: center;
     }
-    #gameCanvas {
-      background: radial-gradient(#000000, #050505);
-      display: block;
-      margin: 0 auto;
-      border: 2px solid #222;
+    .balance-section {
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
-    .controls, .info {
-      text-align: center;
-      margin-top: 10px;
-    }
-    button {
-      padding: 10px 15px;
-      margin: 5px;
-      background: #1e90ff;
-      color: white;
+    .btn {
+      background-color: #ff9800;
       border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      color: white;
+      font-weight: bold;
+    }
+    canvas {
+      background-color: #111;
+      border: 2px solid white;
+      margin: 20px 0;
+    }
+    .coin-buttons, .action-buttons, .utility-buttons {
+      display: flex;
+      gap: 10px;
+      margin: 10px 0;
+    }
+    .coin-btn {
+      background-color: #2196f3;
+      padding: 10px;
       border-radius: 5px;
+      border: none;
+      color: white;
       cursor: pointer;
     }
-    #coinOptions button {
-      background: #28a745;
-    }
-    #status, #balance {
-      font-size: 18px;
-      margin-top: 5px;
+    #selected-amount {
+      margin-bottom: 10px;
+      font-size: 20px;
+      color: #ffeb3b;
     }
   </style>
 </head>
 <body>
   <header>
-    <h1>SkyBurst 🚀</h1>
-  </header><canvas id="gameCanvas" width="400" height="600"></canvas>
-
-  <div class="controls">
-    <div id="coinOptions">
-      <button onclick="selectCoin(10)">10</button>
-      <button onclick="selectCoin(30)">30</button>
-      <button onclick="selectCoin(50)">50</button>
-      <button onclick="selectCoin(100)">100</button>
-      <button onclick="selectCoin(500)">500</button>
+    <div class="balance-section">
+      <span>Balance: <span id="balance">0</span> coins</span>
+      <button class="btn" onclick="showRecharge()">Recharge</button>
+      <button class="btn" onclick="withdraw()">Withdraw</button>
     </div>
-    <button onclick="cashIn()" id="cashInBtn">Cash In</button>
-    <button onclick="cashOut()" id="cashOutBtn" disabled>Cash Out</button>
-    <br>
-    <button onclick="withdrawScreen()">Withdraw</button>
-    <button onclick="rechargeScreen()">Recharge</button>
-    <button onclick="openReferral()">Referral</button>
-    <button onclick="openSupport()">Support</button>
-  </div>  <div class="info">
-    <div id="status">Status: Waiting for cash in...</div>
-    <div id="balance">Balance: 0 Coins</div>
-  </div><audio id="rocketSound" src="rocket.mp3"></audio> <audio id="boomSound" src="boom.mp3"></audio> <audio id="parachuteSound" src="parachute.mp3"></audio>
+    <div class="utility-buttons">
+      <button class="btn" onclick="refer()">Referral</button>
+      <button class="btn" onclick="supportInfo()">Support</button>
+    </div>
+  </header>  <h1>🚀 SkyBurst Game</h1>  <div id="selected-amount">Selected: 0 coins</div>  <div class="action-buttons">
+    <button class="btn" onclick="cashIn()">Cash In</button>
+    <button class="btn" onclick="cashOut()">Cash Out</button>
+  </div><canvas id="gameCanvas" width="300" height="500"></canvas>
 
-  <script>
-    const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas.getContext("2d");
+  <div class="coin-buttons">
+    <button class="coin-btn" onclick="selectAmount(10)">10</button>
+    <button class="coin-btn" onclick="selectAmount(30)">30</button>
+    <button class="coin-btn" onclick="selectAmount(50)">50</button>
+    <button class="coin-btn" onclick="selectAmount(100)">100</button>
+    <button class="coin-btn" onclick="selectAmount(500)">500</button>
+  </div>  <script>
+    let balance = 0;
+    let selected = 0;
+    let inFlight = false;
+    let cashOutAvailable = false;
+    const balanceEl = document.getElementById('balance');
+    const selectedEl = document.getElementById('selected-amount');
 
-    let shipY = canvas.height - 100;
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    let shipY = 400;
     let speed = 1;
-    let isFlying = false;
-    let shipExploded = false;
-    let selectedCoin = 0;
-    let currentCoins = 0;
-    let interval;
+    let flying = false;
+    let explode = false;
 
-    const rocketSound = document.getElementById("rocketSound");
-    const boomSound = document.getElementById("boomSound");
-    const parachuteSound = document.getElementById("parachuteSound");
-
-    function drawShip() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      if (!shipExploded) {
-        ctx.fillStyle = "white";
-        ctx.beginPath();
-        ctx.moveTo(canvas.width / 2, shipY);
-        ctx.lineTo(canvas.width / 2 - 10, shipY + 30);
-        ctx.lineTo(canvas.width / 2 + 10, shipY + 30);
-        ctx.closePath();
-        ctx.fill();
-      } else {
-        ctx.fillStyle = "red";
-        ctx.font = "30px Arial";
-        ctx.fillText("💥 BOOM!", canvas.width / 2 - 50, shipY);
-      }
+    function updateBalanceDisplay() {
+      balanceEl.innerText = balance;
+      selectedEl.innerText = Selected: ${selected} coins;
     }
 
-    function update() {
-      shipY -= speed;
-      speed += 0.05;
-      drawShip();
-      if (Math.random() < 0.01) {
-        explodeShip();
-      }
-    }
-
-    function explodeShip() {
-      clearInterval(interval);
-      shipExploded = true;
-      boomSound.play();
-      document.getElementById("status").textContent = "💥 Ship exploded! You lost.";
-      setTimeout(resetGame, 2000);
-    }
-
-    function selectCoin(amount) {
-      selectedCoin = amount;
-      document.getElementById("status").textContent = Selected ${amount} coins to Cash In.;
+    function selectAmount(amount) {
+      selected = amount;
+      updateBalanceDisplay();
     }
 
     function cashIn() {
-      if (isFlying || selectedCoin === 0) return;
-      isFlying = true;
-      shipY = canvas.height - 100;
-      speed = 1;
-      shipExploded = false;
-      rocketSound.play();
-      document.getElementById("cashInBtn").disabled = true;
-      document.getElementById("cashOutBtn").disabled = false;
-      document.getElementById("status").textContent = "🚀 Ship is flying...";
-      interval = setInterval(update, 100);
+      if (selected > 0 && balance >= selected && !flying) {
+        balance -= selected;
+        inFlight = true;
+        flying = true;
+        shipY = 400;
+        speed = 1;
+        updateBalanceDisplay();
+        requestAnimationFrame(animate);
+        setTimeout(() => {
+          if (Math.random() < 0.5) explode = true;
+          else cashOutAvailable = true;
+        }, 3000);
+      }
     }
 
     function cashOut() {
-      if (!isFlying || shipExploded) return;
-      clearInterval(interval);
-      parachuteSound.play();
-      let earned = Math.floor(speed * selectedCoin);
-      currentCoins += earned;
-      document.getElementById("balance").textContent = Balance: ${currentCoins} Coins;
-      document.getElementById("status").textContent = 🪂 Cashed out ${earned} coins!;
-      ctx.fillStyle = "yellow";
-      ctx.fillText("🪂", canvas.width / 2, shipY);
-      isFlying = false;
-      document.getElementById("cashInBtn").disabled = false;
-      document.getElementById("cashOutBtn").disabled = true;
-      // Telegram notify here
+      if (cashOutAvailable && flying) {
+        flying = false;
+        cashOutAvailable = false;
+        balance += selected * 2; // simulate win
+        updateBalanceDisplay();
+        drawParachute();
+        notifyTelegram('cashout', selected * 2);
+      }
     }
 
-    function resetGame() {
-      isFlying = false;
-      selectedCoin = 0;
-      shipY = canvas.height - 100;
-      speed = 1;
-      shipExploded = false;
-      document.getElementById("cashInBtn").disabled = false;
-      document.getElementById("cashOutBtn").disabled = true;
-      drawShip();
-    }
-
-    function withdrawScreen() {
-      const amount = prompt("Enter amount to withdraw:");
-      if (amount && amount <= currentCoins) {
-        currentCoins -= amount;
-        document.getElementById("balance").textContent = Balance: ${currentCoins} Coins;
-        alert("Withdrawal request sent to admin.");
-        fetch(https://api.telegram.org/botYOUR_BOT_TOKEN/sendMessage?chat_id=6825228721&text=User requested withdrawal of ${amount} coins.);
+    function animate() {
+      if (!flying) return;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = 'white';
+      ctx.fillRect(140, shipY, 20, 40);
+      shipY -= speed;
+      speed += 0.5;
+      if (explode && speed > 5) {
+        ctx.fillStyle = 'red';
+        ctx.beginPath();
+        ctx.arc(150, shipY, 30, 0, Math.PI * 2);
+        ctx.fill();
+        flying = false;
+        explode = false;
+        alert('🚀 Boom! You lost!');
+        notifyTelegram('explode', 0);
       } else {
-        alert("Insufficient balance or invalid input");
+        requestAnimationFrame(animate);
       }
     }
 
-    function rechargeScreen() {
-      const phone = prompt("Send payment to 0797416633. Enter your M-PESA phone number:");
-      if (phone) {
-        fetch(https://api.telegram.org/botYOUR_BOT_TOKEN/sendMessage?chat_id=6825228721&text=User ${phone} sent M-PESA for recharge.);
-        alert("Request sent. Admin will add coins shortly.");
+    function drawParachute() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = 'yellow';
+      ctx.beginPath();
+      ctx.arc(150, shipY, 20, 0, Math.PI, true);
+      ctx.fill();
+      ctx.fillStyle = 'black';
+      ctx.fillRect(145, shipY, 10, 20);
+    }
+
+    function showRecharge() {
+      let amount = prompt('Send MPESA to 0797416633 and enter amount:');
+      if (amount) {
+        notifyTelegram('recharge', parseInt(amount));
+        alert('Wait for admin approval.');
       }
     }
 
-    function openReferral() {
-      const ref = prompt("Enter your referral code (user ID):");
-      if (ref) {
-        fetch(https://api.telegram.org/botYOUR_BOT_TOKEN/sendMessage?chat_id=6825228721&text=New referral: ${ref}. Give 20 to referrer, 5 to admin.);
-        alert("Referral recorded.");
+    function withdraw() {
+      let amount = prompt('Enter amount to withdraw:');
+      if (amount && parseInt(amount) <= balance) {
+        balance -= parseInt(amount);
+        updateBalanceDisplay();
+        notifyTelegram('withdraw', parseInt(amount));
+        alert('Withdrawal sent to admin.');
+      } else {
+        alert('Insufficient balance');
       }
     }
 
-    function openSupport() {
-      alert("Contact admin on Telegram: @yourhandle or 0797416633");
+    function refer() {
+      const code = prompt('Enter referral code or share your link!');
+      if (code) {
+        balance += 20;
+        notifyTelegram('referral', 20);
+        updateBalanceDisplay();
+      }
     }
 
-    drawShip();
+    function supportInfo() {
+      alert('Support: +254797416633 or @SkyBurstSupport on Telegram');
+    }
+
+    function notifyTelegram(action, amount) {
+      const chatId = "6825228721";
+      const token = "7859896649:AAE4xWMYhE1wsSVqpbBNUC6MXYA2zqGvgdA";
+      const msg = 🚀 ${action.toUpperCase()}\nAmount: ${amount} coins;
+      fetch(https://api.telegram.org/bot${token}/sendMessage, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: chatId, text: msg })
+      });
+    }
+
+    updateBalanceDisplay();
   </script></body>
 </html>
