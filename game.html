@@ -1,114 +1,156 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SkyBurst Game</title>
   <style>
-    body { font-family: Arial, sans-serif; text-align: center; background: #111; color: #fff; margin: 0; padding: 0; }
-    .topbar { display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; background: #222; }
-    .logo { font-size: 1.5em; font-weight: bold; color: #00d9ff; }
-    .balance { font-size: 1.2em; }
-    .btn { background: #00d9ff; color: #111; border: none; padding: 10px 20px; margin: 5px; border-radius: 10px; cursor: pointer; font-weight: bold; }
-    .btn:hover { background: #00b8dd; }
-    .bet-buttons { margin-top: 50px; }
-    .popup { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); justify-content: center; align-items: center; }
-    .popup-content { background: #222; padding: 20px; border-radius: 10px; text-align: center; }
-    .close { float: right; cursor: pointer; color: red; font-size: 18px; }
+    body {
+      background: linear-gradient(to top, #020024, #090979, #00d4ff);
+      margin: 0;
+      font-family: Arial, sans-serif;
+      overflow: hidden;
+      position: relative;
+    }
+    #header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #111;
+      color: #fff;
+      padding: 10px 20px;
+    }
+    #coins {
+      font-size: 18px;
+    }
+    #controls {
+      position: absolute;
+      bottom: 20px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+    #coin-buttons button {
+      margin: 3px;
+      padding: 10px 15px;
+      font-size: 16px;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      background: gold;
+    }
+    #cash-buttons button {
+      margin: 5px;
+      padding: 10px 20px;
+      border: none;
+      font-size: 16px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    #cash-in { background: green; color: #fff; }
+    #cash-out { background: red; color: #fff; }
+
+    #game-area {
+      width: 100%;
+      height: calc(100vh - 60px);
+      position: relative;
+    }
+
+    #ship {
+      width: 80px;
+      position: absolute;
+      bottom: 100px;
+      left: -100px;
+      transition: transform 0.5s ease;
+    }
+
+    #message {
+      position: absolute;
+      top: 70px;
+      width: 100%;
+      text-align: center;
+      color: white;
+      font-size: 24px;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
-  <div class="topbar">
-    <div class="logo">SkyBurst</div>
-    <div class="balance">Coins: <span id="coin-balance">0</span></div>
-    <div>
-      <button class="btn" onclick="openCashIn()">Cash In</button>
-      <button class="btn" onclick="openCashOut()">Cash Out</button>
-    </div>
-  </div>  <div class="bet-buttons">
-    <button class="btn" onclick="playGame(10)">10</button>
-    <button class="btn" onclick="playGame(30)">30</button>
-    <button class="btn" onclick="playGame(50)">50</button>
-    <button class="btn" onclick="playGame(100)">100</button>
-    <button class="btn" onclick="playGame(500)">500</button>
-    <button class="btn" onclick="playGame(1000)">1000</button>
-  </div>  <div id="cashin-popup" class="popup">
-    <div class="popup-content">
-      <span class="close" onclick="closeCashIn()">&times;</span>
-      <h3>Cash In</h3>
-      <p>Send any amount to: <strong>0797416633</strong> (M-PESA)</p>
-      <p>After payment, your coins will be added by admin.</p>
-    </div>
-  </div>  <div id="cashout-popup" class="popup">
-    <div class="popup-content">
-      <span class="close" onclick="closeCashOut()">&times;</span>
-      <h3>Cash Out</h3>
-      <input type="number" id="withdraw-amount" placeholder="Enter amount" /><br><br>
-      <input type="text" id="withdraw-number" placeholder="Your M-PESA Number" /><br><br>
-      <button class="btn" onclick="submitWithdrawal()">Submit</button>
-    </div>
-  </div>  <script type="module">
-    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
-    const supabase = createClient(
-      'https://omcaquhsmeqfhxpusawu.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9tY2FxdWhzbWVxZmh4cHVzYXd1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMyMTE2ODIsImV4cCI6MjA2ODc4NzY4Mn0.efl5MQ-lbY6kkeMujJQ8NDTLdc_7r_bkTj_AZzwcj4Y'
-    );
+  <div id="header">
+    <div><strong>SkyBurst</strong></div>
+    <div id="coins">Coins: 0</div>
+  </div>
 
-    const username = localStorage.getItem('username');
+  <div id="game-area">
+    <img id="ship" src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Spaceship_simple_cartoon.svg/800px-Spaceship_simple_cartoon.svg.png" alt="Ship" />
+    <div id="message"></div>
+  </div>
+
+  <div id="controls">
+    <div id="coin-buttons">
+      <button onclick="playGame(10)">10</button>
+      <button onclick="playGame(30)">30</button>
+      <button onclick="playGame(50)">50</button>
+      <button onclick="playGame(100)">100</button>
+      <button onclick="playGame(500)">500</button>
+      <button onclick="playGame(1000)">1000</button>
+    </div>
+    <div id="cash-buttons">
+      <button id="cash-in" onclick="cashIn()">Cash In</button>
+      <button id="cash-out" onclick="cashOut()">Cash Out</button>
+    </div>
+  </div>
+
+  <script>
     let balance = 0;
+    let ship = document.getElementById('ship');
+    let message = document.getElementById('message');
+    let coinsDisplay = document.getElementById('coins');
 
-    async function loadBalance() {
-      const { data } = await supabase.from('skyburst_users').select('coins').eq('username', username).single();
-      balance = data?.coins || 0;
-      document.getElementById('coin-balance').innerText = balance;
+    function updateCoins() {
+      coinsDisplay.innerText = Coins: ${balance};
     }
 
-    async function playGame(amount) {
-      if (balance < amount) return alert("Not enough coins");
+    function playGame(bet) {
+      if (bet > balance) {
+        alert("Not enough coins!");
+        return;
+      }
 
-      const win = Math.random() < 0.5;
-      balance = win ? balance + amount : balance - amount;
+      message.innerText = "";
+      ship.style.left = "-100px";
+      ship.style.transition = "none";
 
-      await supabase.from('skyburst_users').update({ coins: balance }).eq('username', username);
-      document.getElementById('coin-balance').innerText = balance;
-      alert(win ? 🎉 You won ${amount} coins! : 💥 You lost ${amount} coins.);
+      setTimeout(() => {
+        ship.style.transition = "left 3s linear";
+        ship.style.left = "100%";
+
+        setTimeout(() => {
+          const win = Math.random() < 0.5;
+          if (win) {
+            balance += bet;
+            message.innerText = 🎉 You WON ${bet} coins!;
+          } else {
+            balance -= bet;
+            message.innerText = 😢 You LOST ${bet} coins.;
+          }
+          updateCoins();
+        }, 3000);
+      }, 100);
     }
 
-    function openCashIn() {
-      document.getElementById('cashin-popup').style.display = 'flex';
+    function cashIn() {
+      alert("Send money to M-PESA: 0797416633\nYou'll be credited shortly.");
     }
 
-    function closeCashIn() {
-      document.getElementById('cashin-popup').style.display = 'none';
+    function cashOut() {
+      alert("Withdraw request sent. Wait for manual approval.");
     }
 
-    function openCashOut() {
-      document.getElementById('cashout-popup').style.display = 'flex';
-    }
+    updateCoins();
+  </script>
 
-    function closeCashOut() {
-      document.getElementById('cashout-popup').style.display = 'none';
-    }
-
-    async function submitWithdrawal() {
-      const amount = document.getElementById('withdraw-amount').value;
-      const number = document.getElementById('withdraw-number').value;
-      if (!amount || !number) return alert("Fill all fields");
-
-      const telegramBotToken = '7859896649:AAE4xWMYhE1wsSVqpbBNUC6MXYA2zqGvgdA';
-      const adminId = '6825228721';
-      const msg = \uD83D\uDCB8 New Withdrawal Request:\n\uD83D\uDC64 User: ${username}\n\uD83D\uDCB5 Amount: ${amount}\n\uD83D\uDCDE M-PESA: ${number};
-
-      await fetch(https://api.telegram.org/bot${telegramBotToken}/sendMessage, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chat_id: adminId, text: msg })
-      });
-
-      alert("Withdrawal request sent. Admin will review it shortly.");
-      closeCashOut();
-    }
-
-    loadBalance();
-  </script></body>
+</body>
 </html>
