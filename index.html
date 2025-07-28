@@ -1,198 +1,117 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>SkyBurst Game</title>
   <style>
     body {
       margin: 0;
-      font-family: Arial, sans-serif;
-      background: #000;
-      color: #fff;
-      overflow: hidden;
-    }
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px 20px;
-      background-color: #111;
-    }
-    .logo {
-      font-size: 1.5em;
-      color: #00ffff;
-    }
-    .balance {
-      font-size: 1.2em;
-      color: #fff;
-    }
-    #ship {
-      width: 80px;
-      position: absolute;
-      bottom: 50px;
-      left: 50%;
-      transform: translateX(-50%);
-      transition: transform 0.2s ease;
-    }
-    .controls {
-      position: absolute;
-      bottom: 10px;
-      width: 100%;
+      font-family: 'Segoe UI', sans-serif;
+      background: #f1f5f9;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 10px;
+      padding: 20px;
     }
-    .buttons {
+
+    header {
+      width: 100%;
       display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #0f172a;
+      color: white;
+      padding: 15px 30px;
+      border-radius: 12px;
+    }
+
+    header img {
+      height: 40px;
+    }
+
+    .coins {
+      font-size: 1.2rem;
+      font-weight: bold;
+    }
+
+    .withdraw-btn {
+      background: #38bdf8;
+      border: none;
+      padding: 10px 18px;
+      color: white;
+      font-weight: bold;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .grid {
+      margin-top: 50px;
+      display: grid;
+      grid-template-columns: repeat(3, 100px);
       gap: 20px;
     }
-    button, .coin-option {
-      padding: 10px 20px;
-      font-size: 1em;
+
+    .coin {
+      background: white;
+      border: 2px solid #0ea5e9;
+      color: #0ea5e9;
+      font-weight: bold;
+      font-size: 1.1rem;
+      padding: 20px;
+      border-radius: 12px;
+      text-align: center;
+      cursor: pointer;
+    }
+
+    .cashout {
+      margin-top: 40px;
+      background: #16a34a;
+      color: white;
+      padding: 14px 30px;
+      font-size: 1rem;
+      font-weight: bold;
       border: none;
       border-radius: 10px;
       cursor: pointer;
-    }
-    .coin-option {
-      background-color: #222;
-      color: #0ff;
-      border: 1px solid #0ff;
-    }
-    .coin-option.selected {
-      background-color: #0ff;
-      color: #000;
-    }
-    .withdraw {
-      position: absolute;
-      top: 15px;
-      right: 120px;
-      background: #ff0;
-      color: #000;
-      border-radius: 10px;
-      padding: 5px 10px;
-      cursor: pointer;
-    }
-    .multiplier-display {
-      position: absolute;
-      top: 40%;
-      width: 100%;
-      text-align: center;
-      font-size: 3em;
-      color: #0ff;
     }
   </style>
 </head>
 <body>
   <header>
-    <div class="logo">SkyBurst</div>
-    <div class="balance">Coins: <span id="coinBalance">0</span></div>
-    <div class="withdraw" onclick="handleWithdraw()">Withdraw</div>
-  </header>  <img id="ship" src="https://i.postimg.cc/GmPRgqKC/spaceship.png" alt="Ship">
-  <div class="multiplier-display" id="multiplierDisplay">x1.00</div>  <div class="controls">
-    <div class="buttons">
-      <button onclick="cashIn()">Cash In</button>
-      <button onclick="cashOut()">Cash Out</button>
-    </div>
-    <div class="coin-options">
-      <span class="coin-option" onclick="selectCoins(10)">10</span>
-      <span class="coin-option" onclick="selectCoins(30)">30</span>
-      <span class="coin-option" onclick="selectCoins(50)">50</span>
-      <span class="coin-option" onclick="selectCoins(100)">100</span>
-      <span class="coin-option" onclick="selectCoins(500)">500</span>
-      <span class="coin-option" onclick="selectCoins(1000)">1000</span>
-    </div>
-  </div><audio id="takeoffSound" src="https://freesound.org/data/previews/469/469222_990701-lq.mp3"></audio> <audio id="explodeSound" src="https://freesound.org/data/previews/103/103107_861714-lq.mp3"></audio>
+    <img src="https://i.imgur.com/8QpKyfK.png" alt="SkyBurst Logo" />
+    <div class="coins">Coins: <span id="coinCount">0</span></div>
+    <button class="withdraw-btn">Withdraw</button>
+  </header>
+
+  <div class="grid">
+    <div class="coin" onclick="addCoins(10)">10</div>
+    <div class="coin" onclick="addCoins(30)">30</div>
+    <div class="coin" onclick="addCoins(50)">50</div>
+    <div class="coin" onclick="addCoins(100)">100</div>
+    <div class="coin" onclick="addCoins(500)">500</div>
+    <div class="coin" onclick="addCoins(1000)">1000</div>
+  </div>
+
+  <button class="cashout" onclick="cashOut()">💸 Cash Out</button>
 
   <script>
-    const supabaseUrl = "https://omcaquhsmeqfhxpusawu.supabase.co";
-    const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9tY2FxdWhzbWVxZmh4cHVzYXd1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMyMTE2ODIsImV4cCI6MjA2ODc4NzY4Mn0.efl5MQ-lbY6kkeMujJQ8NDTLdc_7r_bkTj_AZzwcj4Y";
-    const ship = document.getElementById("ship");
-    const multiplierDisplay = document.getElementById("multiplierDisplay");
-    const takeoffSound = document.getElementById("takeoffSound");
-    const explodeSound = document.getElementById("explodeSound");
-    let selectedCoins = 0;
-    let coinBalance = 0;
-    let multiplier = 1;
-    let crashed = false;
-    let interval;
+    let coinCount = 0;
 
-    async function fetchCoins() {
-      const phone = localStorage.getItem("phone");
-      const { data } = await fetch(${supabaseUrl}/rest/v1/skyburst_users?phone=eq.${phone}, {
-        headers: {
-          apikey: supabaseKey,
-          Authorization: Bearer ${supabaseKey},
-        },
-      }).then(res => res.json());
-      if (data[0]) {
-        coinBalance = data[0].coins;
-        document.getElementById("coinBalance").innerText = coinBalance;
-      }
-    }
-
-    function selectCoins(amount) {
-      selectedCoins = amount;
-      document.querySelectorAll(".coin-option").forEach(btn => btn.classList.remove("selected"));
-      [...document.querySelectorAll(".coin-option")].find(e => e.innerText == amount).classList.add("selected");
-    }
-
-    function handleWithdraw() {
-      const phone = localStorage.getItem("phone");
-      const amount = prompt("How many coins do you want to withdraw?");
-      if (!amount || isNaN(amount)) return alert("Invalid amount");
-      fetch(https://api.telegram.org/bot7859896649:AAE4xWMYhE1wsSVqpbBNUC6MXYA2zqGvgdA/sendMessage, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          chat_id: "5796008412",
-          text: User ${phone} requested to withdraw ${amount} coins.
-        })
-      });
-      alert("Withdrawal request sent!");
-    }
-
-    function cashIn() {
-      if (coinBalance < selectedCoins) return alert("Not enough coins");
-      coinBalance -= selectedCoins;
-      document.getElementById("coinBalance").innerText = coinBalance;
-      localStorage.setItem("cashIn", selectedCoins);
-      takeoff();
+    function addCoins(amount) {
+      coinCount += amount;
+      document.getElementById('coinCount').innerText = coinCount;
     }
 
     function cashOut() {
-      let cashInValue = localStorage.getItem("cashIn") || 0;
-      let payout = Math.floor(cashInValue * multiplier);
-      coinBalance += payout;
-      document.getElementById("coinBalance").innerText = coinBalance;
-      clearInterval(interval);
-      explodeSound.play();
-      multiplier = 1;
-      ship.style.transform = translate(-50%, 0);
-      multiplierDisplay.innerText = "x1.00";
+      if (coinCount < 100) {
+        alert('Minimum 100 coins required to cash out!');
+        return;
+      }
+      alert(Cashing out ${coinCount} coins...);
+      coinCount = 0;
+      document.getElementById('coinCount').innerText = coinCount;
     }
-
-    function takeoff() {
-      takeoffSound.play();
-      crashed = false;
-      let y = 0;
-      multiplier = 1;
-      interval = setInterval(() => {
-        if (multiplier >= 7 || Math.random() < 0.05) {
-          clearInterval(interval);
-          explodeSound.play();
-          crashed = true;
-          ship.style.transform = translate(-50%, 0);
-          multiplierDisplay.innerText = CRASHED!;
-          return;
-        }
-        y += 10;
-        ship.style.transform = translate(-50%, -${y}px);
-        multiplier += 0.1;
-        multiplierDisplay.innerText = x${multiplier.toFixed(2)};
-      }, 500);
-    }
-
-    window.onload = fetchCoins;
-  </script></body>
+  </script>
+</body>
 </html>
