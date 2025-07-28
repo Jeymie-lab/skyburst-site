@@ -1,37 +1,44 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
   <title>Register - SkyBurst</title>
 </head>
 <body>
   <h2>Register for SkyBurst</h2>
-  <input type="text" id="username" placeholder="Username"><br>
-  <input type="password" id="password" placeholder="Password"><br>
-  <button onclick="register()">Register</button>
+  <form id="register-form">
+    <input type="text" id="register-username" placeholder="Username" required><br>
+    <input type="password" id="register-password" placeholder="Password" required><br>
+    <button type="submit">Register</button>
+  </form>
+  <p>Already have an account? <a href="index.html">Login here</a></p>
 
-  <p>Already have an account? <a href="login.html">Login here</a></p>
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-  <script>
-    const supabaseUrl = 'https://omcaquhsmeqfhxpusawu.supabase.co';
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9tY2FxdWhzbWVxZmh4cHVzYXd1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMyMTE2ODIsImV4cCI6MjA2ODc4NzY4Mn0.efl5MQ-lbY6kkeMujJQ8NDTLdc_7r_bkTj_AZzwcj4Y';
-    const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+    const supabase = createClient(
+      'https://omcaquhsmeqfhxpusawu.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9tY2FxdWhzbWVxZmh4cHVzYXd1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMyMTE2ODIsImV4cCI6MjA2ODc4NzY4Mn0.efl5MQ-lbY6kkeMujJQ8NDTLdc_7r_bkTj_AZzwcj4Y'
+    );
 
-    async function register() {
-      const username = document.getElementById('username').value;
-      const password = document.getElementById('password').value;
+    document.getElementById('register-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const username = document.getElementById('register-username').value;
+      const password = document.getElementById('register-password').value;
 
       const { data, error } = await supabase
         .from('skyburst_users')
         .insert([{ username, password }]);
 
       if (error) {
-        alert('Error: ' + error.message);
+        alert("Registration failed: " + error.message);
+        console.error(error);
       } else {
-        alert('Registered successfully!');
-        window.location.href = 'login.html';
+        // Save session and redirect
+        localStorage.setItem('username', username);
+        window.location.href = "game.html";
       }
-    }
+    });
   </script>
 </body>
 </html>
