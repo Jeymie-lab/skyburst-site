@@ -1,36 +1,52 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SkyBurst Game</title>
   <style>
-    body {
-      text-align: center;
-      font-family: sans-serif;
-      background-color: #000;
-      color: #fff;
-    }
-    #logout-btn {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      background: crimson;
-      color: white;
-      border: none;
-      padding: 8px 12px;
-      cursor: pointer;
-    }
+    body { font-family: Arial, sans-serif; text-align: center; background: #111; color: #fff; margin: 0; padding: 0; }
+    .topbar { display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; background: #222; }
+    .logo { font-size: 1.5em; font-weight: bold; color: #00d9ff; }
+    .balance { font-size: 1.2em; }
+    .btn { background: #00d9ff; color: #111; border: none; padding: 10px 20px; margin: 5px; border-radius: 10px; cursor: pointer; font-weight: bold; }
+    .btn:hover { background: #00b8dd; }
+    .bet-buttons { margin-top: 50px; }
+    .popup { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); justify-content: center; align-items: center; }
+    .popup-content { background: #222; padding: 20px; border-radius: 10px; text-align: center; }
+    .close { float: right; cursor: pointer; color: red; font-size: 18px; }
   </style>
 </head>
 <body>
-  <h1>Welcome to SkyBurst 🚀</h1>
-  <p id="welcome-user"></p>
-  <button id="logout-btn">Logout</button>
-
-  <!-- Your game UI goes here -->
-  <p>🚨 Game Coming Soon...</p>
-
-  <script type="module">
+  <div class="topbar">
+    <div class="logo">SkyBurst</div>
+    <div class="balance">Coins: <span id="coin-balance">0</span></div>
+    <div>
+      <button class="btn" onclick="openCashIn()">Cash In</button>
+      <button class="btn" onclick="openCashOut()">Cash Out</button>
+    </div>
+  </div>  <div class="bet-buttons">
+    <button class="btn" onclick="playGame(10)">10</button>
+    <button class="btn" onclick="playGame(30)">30</button>
+    <button class="btn" onclick="playGame(50)">50</button>
+    <button class="btn" onclick="playGame(100)">100</button>
+    <button class="btn" onclick="playGame(500)">500</button>
+    <button class="btn" onclick="playGame(1000)">1000</button>
+  </div>  <div id="cashin-popup" class="popup">
+    <div class="popup-content">
+      <span class="close" onclick="closeCashIn()">&times;</span>
+      <h3>Cash In</h3>
+      <p>Send any amount to: <strong>0797416633</strong> (M-PESA)</p>
+      <p>After payment, your coins will be added by admin.</p>
+    </div>
+  </div>  <div id="cashout-popup" class="popup">
+    <div class="popup-content">
+      <span class="close" onclick="closeCashOut()">&times;</span>
+      <h3>Cash Out</h3>
+      <input type="number" id="withdraw-amount" placeholder="Enter amount" /><br><br>
+      <input type="text" id="withdraw-number" placeholder="Your M-PESA Number" /><br><br>
+      <button class="btn" onclick="submitWithdrawal()">Submit</button>
+    </div>
+  </div>  <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
     const supabase = createClient(
@@ -38,19 +54,61 @@
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9tY2FxdWhzbWVxZmh4cHVzYXd1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMyMTE2ODIsImV4cCI6MjA2ODc4NzY4Mn0.efl5MQ-lbY6kkeMujJQ8NDTLdc_7r_bkTj_AZzwcj4Y'
     );
 
-    // Check login
     const username = localStorage.getItem('username');
-    if (!username) {
-      window.location.href = "index.html";
-    } else {
-      document.getElementById("welcome-user").innerText = Player: ${username};
+    let balance = 0;
+
+    async function loadBalance() {
+      const { data } = await supabase.from('skyburst_users').select('coins').eq('username', username).single();
+      balance = data?.coins || 0;
+      document.getElementById('coin-balance').innerText = balance;
     }
 
-    // Logout
-    document.getElementById("logout-btn").addEventListener("click", () => {
-      localStorage.removeItem("username");
-      window.location.href = "index.html";
-    });
-  </script>
-</body>
+    async function playGame(amount) {
+      if (balance < amount) return alert("Not enough coins");
+
+      const win = Math.random() < 0.5;
+      balance = win ? balance + amount : balance - amount;
+
+      await supabase.from('skyburst_users').update({ coins: balance }).eq('username', username);
+      document.getElementById('coin-balance').innerText = balance;
+      alert(win ? 🎉 You won ${amount} coins! : 💥 You lost ${amount} coins.);
+    }
+
+    function openCashIn() {
+      document.getElementById('cashin-popup').style.display = 'flex';
+    }
+
+    function closeCashIn() {
+      document.getElementById('cashin-popup').style.display = 'none';
+    }
+
+    function openCashOut() {
+      document.getElementById('cashout-popup').style.display = 'flex';
+    }
+
+    function closeCashOut() {
+      document.getElementById('cashout-popup').style.display = 'none';
+    }
+
+    async function submitWithdrawal() {
+      const amount = document.getElementById('withdraw-amount').value;
+      const number = document.getElementById('withdraw-number').value;
+      if (!amount || !number) return alert("Fill all fields");
+
+      const telegramBotToken = '7859896649:AAE4xWMYhE1wsSVqpbBNUC6MXYA2zqGvgdA';
+      const adminId = '6825228721';
+      const msg = \uD83D\uDCB8 New Withdrawal Request:\n\uD83D\uDC64 User: ${username}\n\uD83D\uDCB5 Amount: ${amount}\n\uD83D\uDCDE M-PESA: ${number};
+
+      await fetch(https://api.telegram.org/bot${telegramBotToken}/sendMessage, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: adminId, text: msg })
+      });
+
+      alert("Withdrawal request sent. Admin will review it shortly.");
+      closeCashOut();
+    }
+
+    loadBalance();
+  </script></body>
 </html>
