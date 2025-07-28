@@ -1,213 +1,193 @@
-<!DOCTYPE html><html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<!DOCTYPE html><html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SkyBurst Game</title>
   <style>
     body {
       margin: 0;
-      padding: 0;
       font-family: Arial, sans-serif;
-      background: linear-gradient(to bottom, #000428, #004e92);
+      background: linear-gradient(to bottom, #000020, #000010);
       color: white;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    header {
-      display: flex;
-      justify-content: space-between;
-      width: 100%;
-      padding: 10px;
-    }
-    .balance-section {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .btn {
-      background-color: #ff9800;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 6px;
-      cursor: pointer;
-      color: white;
-      font-weight: bold;
-    }
-    canvas {
-      background-color: #111;
-      border: 2px solid white;
-      margin: 20px 0;
-    }
-    .coin-buttons, .action-buttons, .utility-buttons {
-      display: flex;
-      gap: 10px;
-      margin: 10px 0;
-    }
-    .coin-btn {
-      background-color: #2196f3;
-      padding: 10px;
-      border-radius: 5px;
-      border: none;
-      color: white;
-      cursor: pointer;
-    }
-    #selected-amount {
-      margin-bottom: 10px;
-      font-size: 20px;
-      color: #ffeb3b;
-    }
+      overflow: hidden;
+    }#game-container {
+  position: relative;
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding-top: 10px;
+}
+
+#logo {
+  width: 150px;
+  margin: 10px auto;
+}
+
+#balance-display {
+  margin: 10px;
+  font-size: 20px;
+}
+
+#coin-buttons {
+  margin: 10px;
+}
+
+.coin-button {
+  background: #222;
+  color: white;
+  border: 1px solid white;
+  border-radius: 5px;
+  margin: 5px;
+  padding: 10px;
+  cursor: pointer;
+}
+
+#selected-coin {
+  margin: 10px;
+  font-weight: bold;
+}
+
+#controls {
+  display: flex;
+  gap: 20px;
+  margin: 10px;
+}
+
+.control-button {
+  background: #28a745;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+#rocket {
+  position: absolute;
+  bottom: 100px;
+  width: 60px;
+  transition: bottom 0.3s;
+}
+
+#referral, #support, #withdraw {
+  margin: 10px;
+  padding: 10px;
+  background: #444;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+#status {
+  margin: 10px;
+  font-size: 16px;
+  color: yellow;
+}
+
   </style>
-</head>
-<body>
-  <header>
-    <div class="balance-section">
-      <span>Balance: <span id="balance">0</span> coins</span>
-      <button class="btn" onclick="showRecharge()">Recharge</button>
-      <button class="btn" onclick="withdraw()">Withdraw</button>
-    </div>
-    <div class="utility-buttons">
-      <button class="btn" onclick="refer()">Referral</button>
-      <button class="btn" onclick="supportInfo()">Support</button>
-    </div>
-  </header>  <h1>🚀 SkyBurst Game</h1>  <div id="selected-amount">Selected: 0 coins</div>  <div class="action-buttons">
-    <button class="btn" onclick="cashIn()">Cash In</button>
-    <button class="btn" onclick="cashOut()">Cash Out</button>
-  </div><canvas id="gameCanvas" width="300" height="500"></canvas>
+</head><body>
+  <div id="game-container">
+    <img id="logo" src="https://i.ibb.co/NVsmDpH/skyburst-logo.png" alt="SkyBurst Logo"><div id="balance-display">Coins: <span id="balance">100</span></div>
 
-  <div class="coin-buttons">
-    <button class="coin-btn" onclick="selectAmount(10)">10</button>
-    <button class="coin-btn" onclick="selectAmount(30)">30</button>
-    <button class="coin-btn" onclick="selectAmount(50)">50</button>
-    <button class="coin-btn" onclick="selectAmount(100)">100</button>
-    <button class="coin-btn" onclick="selectAmount(500)">500</button>
+<div id="coin-buttons">
+  <button class="coin-button" onclick="selectCoin(10)">10</button>
+  <button class="coin-button" onclick="selectCoin(30)">30</button>
+  <button class="coin-button" onclick="selectCoin(50)">50</button>
+  <button class="coin-button" onclick="selectCoin(100)">100</button>
+  <button class="coin-button" onclick="selectCoin(500)">500</button>
+</div>
+
+<div id="selected-coin">Selected Bet: 10</div>
+
+<div id="controls">
+  <button class="control-button" onclick="cashIn()">Cash In</button>
+  <button class="control-button" onclick="cashOut()">Cash Out</button>
+</div>
+
+<img id="rocket" src="https://i.ibb.co/zXj2hKg/rocket.png" alt="Rocket">
+
+<div id="status"></div>
+
+<button id="referral" onclick="copyReferral()">Referral Link</button>
+<button id="support" onclick="window.open('https://t.me/YourSupportBot', '_blank')">Support</button>
+<button id="withdraw" onclick="promptWithdraw()">Withdraw</button>
+
   </div>  <script>
-    let balance = 0;
-    let selected = 0;
-    let inFlight = false;
-    let cashOutAvailable = false;
-    const balanceEl = document.getElementById('balance');
-    const selectedEl = document.getElementById('selected-amount');
+    let balance = 100;
+    let selectedCoin = 10;
+    let rocket = document.getElementById("rocket");
+    let height = 100;
+    let launched = false;
+    let interval;
 
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-    let shipY = 400;
-    let speed = 1;
-    let flying = false;
-    let explode = false;
-
-    function updateBalanceDisplay() {
-      balanceEl.innerText = balance;
-      selectedEl.innerText = Selected: ${selected} coins;
-    }
-
-    function selectAmount(amount) {
-      selected = amount;
-      updateBalanceDisplay();
+    function selectCoin(coin) {
+      selectedCoin = coin;
+      document.getElementById("selected-coin").textContent = Selected Bet: ${coin};
     }
 
     function cashIn() {
-      if (selected > 0 && balance >= selected && !flying) {
-        balance -= selected;
-        inFlight = true;
-        flying = true;
-        shipY = 400;
-        speed = 1;
-        updateBalanceDisplay();
-        requestAnimationFrame(animate);
-        setTimeout(() => {
-          if (Math.random() < 0.5) explode = true;
-          else cashOutAvailable = true;
-        }, 3000);
+      if (launched) return;
+      if (balance < selectedCoin) {
+        alert("Not enough coins");
+        return;
       }
+      balance -= selectedCoin;
+      document.getElementById("balance").textContent = balance;
+      height = 100;
+      rocket.style.bottom = height + "px";
+      launched = true;
+      interval = setInterval(() => {
+        height += Math.floor(Math.random() * 10 + 5);
+        rocket.style.bottom = height + "px";
+        if (Math.random() < 0.01) explode();
+      }, 100);
     }
 
     function cashOut() {
-      if (cashOutAvailable && flying) {
-        flying = false;
-        cashOutAvailable = false;
-        balance += selected * 2; // simulate win
-        updateBalanceDisplay();
-        drawParachute();
-        notifyTelegram('cashout', selected * 2);
-      }
+      if (!launched) return;
+      clearInterval(interval);
+      const winnings = selectedCoin * Math.random().toFixed(2) * 5;
+      balance += Math.floor(winnings);
+      document.getElementById("balance").textContent = balance;
+      document.getElementById("status").textContent = Cashed Out! You won ${Math.floor(winnings)} coins!;
+      launched = false;
+      notifyTelegram(User cashed out ${Math.floor(winnings)} coins.);
     }
 
-    function animate() {
-      if (!flying) return;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = 'white';
-      ctx.fillRect(140, shipY, 20, 40);
-      shipY -= speed;
-      speed += 0.5;
-      if (explode && speed > 5) {
-        ctx.fillStyle = 'red';
-        ctx.beginPath();
-        ctx.arc(150, shipY, 30, 0, Math.PI * 2);
-        ctx.fill();
-        flying = false;
-        explode = false;
-        alert('🚀 Boom! You lost!');
-        notifyTelegram('explode', 0);
-      } else {
-        requestAnimationFrame(animate);
-      }
+    function explode() {
+      clearInterval(interval);
+      document.getElementById("status").textContent = "Boom! You lost the bet.";
+      notifyTelegram(Rocket exploded. User lost ${selectedCoin} coins.);
+      launched = false;
     }
 
-    function drawParachute() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = 'yellow';
-      ctx.beginPath();
-      ctx.arc(150, shipY, 20, 0, Math.PI, true);
-      ctx.fill();
-      ctx.fillStyle = 'black';
-      ctx.fillRect(145, shipY, 10, 20);
+    function copyReferral() {
+      navigator.clipboard.writeText("https://t.me/YourSkyBurstBot?start=ref123");
+      alert("Referral link copied!");
     }
 
-    function showRecharge() {
-      let amount = prompt('Send MPESA to 0797416633 and enter amount:');
-      if (amount) {
-        notifyTelegram('recharge', parseInt(amount));
-        alert('Wait for admin approval.');
-      }
-    }
-
-    function withdraw() {
-      let amount = prompt('Enter amount to withdraw:');
+    function promptWithdraw() {
+      const amount = prompt("Enter amount to withdraw:");
       if (amount && parseInt(amount) <= balance) {
         balance -= parseInt(amount);
-        updateBalanceDisplay();
-        notifyTelegram('withdraw', parseInt(amount));
-        alert('Withdrawal sent to admin.');
+        document.getElementById("balance").textContent = balance;
+        notifyTelegram(User requested withdrawal of ${amount} coins.);
       } else {
-        alert('Insufficient balance');
+        alert("Invalid amount or not enough balance.");
       }
     }
 
-    function refer() {
-      const code = prompt('Enter referral code or share your link!');
-      if (code) {
-        balance += 20;
-        notifyTelegram('referral', 20);
-        updateBalanceDisplay();
-      }
-    }
-
-    function supportInfo() {
-      alert('Support: +254797416633 or @SkyBurstSupport on Telegram');
-    }
-
-    function notifyTelegram(action, amount) {
+    function notifyTelegram(message) {
       const chatId = "6825228721";
       const token = "7859896649:AAE4xWMYhE1wsSVqpbBNUC6MXYA2zqGvgdA";
-      const msg = 🚀 ${action.toUpperCase()}\nAmount: ${amount} coins;
       fetch(https://api.telegram.org/bot${token}/sendMessage, {
-        method: 'POST',
+        method: "POST",
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chat_id: chatId, text: msg })
+        body: JSON.stringify({ chat_id: chatId, text: message })
       });
     }
-
-    updateBalanceDisplay();
-  </script></body>
-</html>
+  </script></body></html>
