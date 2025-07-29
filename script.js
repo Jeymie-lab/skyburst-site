@@ -1,74 +1,95 @@
-// ✅ Your actual Supabase credentials
-const SUPABASE_URL = "https://xbofjvlzrcspmqszbtov.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhib2Zqdmx6cmNzcG1xc3pidG92Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTY0OTI4NzUsImV4cCI6MjAzMjA2ODg3NX0.GU0bxlSfqR3nrpVnR_65XkzGhw_5e5fpGniHP_3TuWw";
-
+// =======================
+// Supabase Config
+// =======================
+const SUPABASE_URL = 'https://omcaquhsmeqfhxpusawu.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9tY2FxdWhzbWVxZmh4cHVzYXd1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDA1MjAyODksImV4cCI6MTczMjA1NjI4OX0.L6oLC9ljUQuU9GeEqgiAS9O1ngbQ6cKcx4V9E7pUeZs';
 const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-console.log("📦 Script loaded...");
+// =======================
+// Register Logic
+// =======================
+document.getElementById("register-form")?.addEventListener("submit", async (e) => {
+  e.preventDefault();
 
-const loginForm = document.getElementById("login-form");
-const signupForm = document.getElementById("signup-form");
+  const username = document.getElementById("register-username").value.trim();
+  const password = document.getElementById("register-password").value.trim();
+  const referrer = document.getElementById("register-referrer").value.trim();
 
-// 🔐 LOGIN
-if (loginForm) {
-  console.log("🔐 Login form found");
+  console.log("Attempting to register user:", { username, password, referrer });
 
-  loginForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    console.log("🚀 Login form submitted");
+  const { data: existingUser, error: checkError } = await supabase
+    .from("skyburst_users")
+    .select("*")
+    .eq("username", username)
+    .maybeSingle();
 
-    const username = document.getElementById("login-username").value;
-    const password = document.getElementById("login-password").value;
+  if (checkError) {
+    console.error("Error checking existing user:", checkError.message);
+    return alert("Error during registration.");
+  }
 
-    console.log("🧑 Username:", username);
-    console.log("🔑 Password:", password);
+  if (existingUser) {
+    alert("Username already exists.");
+    return;
+  }
 
-    const { data, error } = await supabase
-      .from("skyburst_users")
-      .select("*")
-      .eq("username", username)
-      .eq("password", password)
-      .single();
-
-    if (error || !data) {
-      console.log("❌ Login failed", error);
-      alert("Login failed! Check your credentials.");
-    } else {
-      console.log("✅ Login successful", data);
-      localStorage.setItem("user", JSON.stringify(data));
-      window.location.href = "game.html";
-    }
+  const { error: signupError } = await supabase.rpc("handle_user_signup", {
+    username,
+    password,
+    referrer: referrer || null,
   });
-}
 
-// 🆕 SIGNUP
-if (signupForm) {
-  console.log("🆕 Signup form found");
+  if (signupError) {
+    console.error("Signup error:", signupError.message);
+    return alert("Failed to register.");
+  }
 
-  signupForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    console.log("🚀 Signup form submitted");
+  const { data: newUser, error: fetchError } = await supabase
+    .from("skyburst_users")
+    .select("*")
+    .eq("username", username)
+    .eq("password", password)
+    .single();
 
-    const username = document.getElementById("signup-username").value;
-    const password = document.getElementById("signup-password").value;
-    const referrer = document.getElementById("signup-referrer").value;
+  if (fetchError || !newUser) {
+    console.error("Error fetching new user after registration:", fetchError?.message);
+    return alert("Registration succeeded but login failed.");
+  }
 
-    console.log("🧑 Username:", username);
-    console.log("🔑 Password:", password);
-    console.log("🧭 Referrer:", referrer);
+  console.log("Registration successful, user data:", newUser);
+  localStorage.setItem("user", JSON.stringify(newUser));
+  window.location.href = "game.html";
+});
 
-    const { error } = await supabase.rpc("handle_user_signup", {
-      username,
-      password,
-      referrer: referrer || null,
-    });
+// =======================
+// Login Logic
+// =======================
+document.getElementById("login-form")?.addEventListener("submit", async (e) => {
+  e.preventDefault();
 
-    if (error) {
-      console.log("❌ Signup error", error);
-      alert("Signup failed. Try again.");
-    } else {
-      console.log("✅ Signup success");
-      alert("Signup successful! You can now log in.");
-    }
-  });
-}
+  const username = document.getElementById("login-username").value.trim();
+  const password = document.getElementById("login-password").value.trim();
+
+  console.log("Attempting login:", { username, password });
+
+  const { data: user, error } = await supabase
+    .from("skyburst_users")
+    .select("*")
+    .eq("username", username)
+    .eq("password", password)
+    .maybeSingle();
+
+  if (error) {
+    console.error("Login error:", error.message);
+    return alert("Login failed. Please try again.");
+  }
+
+  if (!user) {
+    console.warn("User not found or wrong credentials.");
+    return alert("Invalid username or password.");
+  }
+
+  console.log("Login successful, user data:", user);
+  localStorage.setItem("user", JSON.stringify(user));
+  window.location.href = "game.html";
+});
