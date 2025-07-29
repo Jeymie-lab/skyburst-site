@@ -1,3 +1,4 @@
+console.log("✅ script.js loaded");
 // =======================
 // Supabase Config
 // =======================
