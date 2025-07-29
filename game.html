@@ -1,173 +1,186 @@
-<!DOCTYPE html><html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SkyBurst Game</title>
+<!DOCTYPE html><html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SkyBurst Aviator Game</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap">
   <style>
     body {
       margin: 0;
-      padding: 0;
-      background: #000;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      color: #fff;
-      text-align: center;
-      overflow: hidden;
+      font-family: 'Orbitron', sans-serif;
+      background: linear-gradient(to top, #0f2027, #203a43, #2c5364);
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      overflow-x: hidden;
     }
     header {
-      background: #111;
       padding: 10px;
-    }
-    h1 {
-      margin: 0;
       font-size: 24px;
     }
-    #gameCanvas {
-      background: linear-gradient(to top, #020202, #1a1a1a);
-      width: 100vw;
-      height: 60vh;
+    .game-area {
       position: relative;
+      width: 90vw;
+      max-width: 500px;
+      height: 300px;
+      border: 2px solid #fff;
+      margin: 20px 0;
       overflow: hidden;
+      background: radial-gradient(circle, #1a1a1a 0%, #000000 100%);
     }
     .ship {
-      width: 50px;
       position: absolute;
       bottom: 0;
       left: 50%;
+      width: 50px;
+      height: 50px;
+      background: url('https://cdn-icons-png.flaticon.com/512/187/187190.png') no-repeat center;
+      background-size: contain;
       transform: translateX(-50%);
-      transition: transform 0.2s;
     }
-    .controls {
-      margin: 20px 0;
-    }
-    .coins {
+    .controls, .balance-section, .buttons {
       display: flex;
       justify-content: center;
-      gap: 10px;
-      margin-bottom: 10px;
+      gap: 15px;
+      flex-wrap: wrap;
     }
-    .coin {
-      background: #222;
-      padding: 10px;
+    button {
+      padding: 10px 20px;
+      font-size: 18px;
+      border: none;
+      background: #ff4b2b;
+      color: white;
       border-radius: 10px;
       cursor: pointer;
-      border: 2px solid transparent;
     }
-    .coin.selected {
-      border: 2px solid #00ff00;
+    .balance-section {
+      margin: 10px;
+      font-size: 18px;
     }
-    .buttons {
+    .coin-options {
       display: flex;
       justify-content: center;
       flex-wrap: wrap;
       gap: 10px;
+      margin-bottom: 15px;
     }
-    button {
-      padding: 10px 20px;
-      background: #00aaff;
-      border: none;
-      border-radius: 10px;
-      color: #fff;
+    .coin {
+      background: #444;
+      padding: 8px 16px;
+      border-radius: 8px;
       cursor: pointer;
-      font-weight: bold;
     }
-    #balanceDisplay {
-      margin: 10px 0;
-      font-size: 18px;
+    .coin.active {
+      background: #ff4b2b;
+    }
+    audio {
+      display: none;
     }
   </style>
-</head>
-<body>
-  <header>
-    <h1>🚀 SkyBurst</h1>
-  </header>
-  <div id="gameCanvas">
-    <img id="ship" class="ship" src="https://cdn-icons-png.flaticon.com/512/3210/3210154.png" />
-  </div>
-  <div id="balanceDisplay">Balance: <span id="balance">0</span> Coins</div>
-  <div class="controls">
-    <div class="coins">
-      <div class="coin" data-value="10">10</div>
-      <div class="coin" data-value="30">30</div>
-      <div class="coin" data-value="50">50</div>
-      <div class="coin" data-value="100">100</div>
-      <div class="coin" data-value="500">500</div>
-    </div>
-    <div class="buttons">
-      <button id="cashInBtn">Cash In</button>
-      <button id="cashOutBtn" disabled>Cash Out</button>
-      <button id="withdrawBtn">Withdraw</button>
-      <button id="rechargeBtn">Recharge</button>
-      <button id="referralBtn">Referral</button>
-      <button id="supportBtn">Support</button>
-    </div>
-  </div>  <script>
-    let balance = 0;
-    let selectedBet = 0;
-    let isFlying = false;
-    let speed = 1;
-    let height = 0;
-    let ship = document.getElementById("ship");
-    let shipInterval = null;
-    let explosionPoint = Math.floor(Math.random() * 500 + 200); // random explosion height
+</head><body>
+  <header>🚀 SkyBurst Game</header>
+  <div class="game-area" id="gameArea">
+    <div class="ship" id="ship"></div>
+  </div>  <div class="balance-section">
+    <span>Balance: <span id="balance">0</span> coins</span>
+  </div>  <div class="coin-options">
+    <div class="coin" data-amount="10">10</div>
+    <div class="coin" data-amount="20">20</div>
+    <div class="coin" data-amount="50">50</div>
+    <div class="coin" data-amount="100">100</div>
+  </div>  <div class="buttons">
+    <button onclick="startGame()">Start Game</button>
+    <button onclick="recharge()">Cash In</button>
+    <button onclick="withdraw()">Cash Out</button>
+    <button onclick="refer()">Refer</button>
+  </div><audio id="takeoff" src="https://assets.mixkit.co/sfx/preview/mixkit-spaceship-take-off-1686.mp3"></audio> <audio id="explode" src="https://assets.mixkit.co/sfx/preview/mixkit-explosion-1705.mp3"></audio>
 
+  <script>
+    const userId = '6825228721';
+    const adminId = '6825228721';
+    const supabaseUrl = 'https://omcaquhsmeqfhxpusawu.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9tY2FxdWhzbWVxZmh4cHVzYXd1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMyMTE2ODIsImV4cCI6MjA2ODc4NzY4Mn0.efl5MQ-lbY6kkeMujJQ8NDTLdc_7r_bkTj_AZzwcj4Y';
+
+    const { createClient } = supabase;
+    const db = createClient(supabaseUrl, supabaseKey);
+
+    let selectedCoin = 10;
     document.querySelectorAll('.coin').forEach(btn => {
       btn.addEventListener('click', () => {
-        document.querySelectorAll('.coin').forEach(c => c.classList.remove('selected'));
-        btn.classList.add('selected');
-        selectedBet = parseInt(btn.dataset.value);
+        document.querySelectorAll('.coin').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        selectedCoin = parseInt(btn.dataset.amount);
       });
     });
 
-    document.getElementById("cashInBtn").addEventListener("click", () => {
-      if (isFlying || selectedBet === 0 || selectedBet > balance) return;
-      balance -= selectedBet;
-      updateBalance();
-      startFlight();
-    });
-
-    document.getElementById("cashOutBtn").addEventListener("click", () => {
-      if (!isFlying) return;
-      const payout = Math.floor(selectedBet * (height / 100));
-      balance += payout;
-      alert(You cashed out with ${payout} coins! 🪂);
-      updateBalance();
-      resetFlight();
-    });
-
-    function updateBalance() {
-      document.getElementById("balance").innerText = balance;
+    async function getBalance() {
+      let { data } = await db.from('skyburst_users').select('balance').eq('user_id', userId).single();
+      document.getElementById('balance').innerText = data ? data.balance : 0;
     }
 
-    function startFlight() {
-      isFlying = true;
-      document.getElementById("cashOutBtn").disabled = false;
-      height = 0;
-      speed = 1;
-      ship.style.bottom = '0px';
-
-      shipInterval = setInterval(() => {
-        height += speed;
-        speed += 0.2;
-        ship.style.bottom = ${height}px;
-        if (height >= explosionPoint) explode();
-      }, 100);
+    async function updateBalance(change) {
+      let { data } = await db.from('skyburst_users').select('*').eq('user_id', userId).single();
+      let newBal = (data?.balance || 0) + change;
+      if (data) {
+        await db.from('skyburst_users').update({ balance: newBal }).eq('user_id', userId);
+      } else {
+        await db.from('skyburst_users').insert({ user_id: userId, balance: newBal });
+      }
+      getBalance();
     }
 
-    function explode() {
-      clearInterval(shipInterval);
-      alert("💥 Ship exploded! You lost the round.");
-      resetFlight();
+    async function recharge() {
+      updateBalance(50);
+      alert('50 coins added (simulated).');
     }
 
-    function resetFlight() {
-      isFlying = false;
-      document.getElementById("cashOutBtn").disabled = true;
-      ship.style.bottom = '0px';
-      explosionPoint = Math.floor(Math.random() * 500 + 200);
+    async function withdraw() {
+      let { data } = await db.from('skyburst_users').select('*').eq('user_id', userId).single();
+      if ((data?.balance || 0) >= 100) {
+        alert('Withdrawal request sent to admin.');
+        updateBalance(-100);
+      } else {
+        alert('Minimum withdrawal is 100 coins.');
+      }
     }
 
-    // TEST BALANCE (Add coins manually for now)
-    balance = 200;
-    updateBalance();
-  </script></body>
-</html>
+    async function refer() {
+      const refUserId = prompt('Enter referral user ID:');
+      if (refUserId && refUserId !== userId) {
+        await updateBalance(5);
+        await db.from('skyburst_users').select('*').eq('user_id', refUserId).then(res => {
+          let bal = (res.data[0]?.balance || 0) + 20;
+          db.from('skyburst_users').update({ balance: bal }).eq('user_id', refUserId);
+        });
+        alert('Referral bonus granted!');
+      } else {
+        alert('Invalid referral.');
+      }
+    }
+
+    function startGame() {
+      document.getElementById('takeoff').play();
+      const ship = document.getElementById('ship');
+      ship.style.bottom = '0';
+      let pos = 0;
+      const move = setInterval(() => {
+        pos += 4;
+        ship.style.bottom = pos + 'px';
+        if (pos > 240) {
+          clearInterval(move);
+          const win = Math.random() < 0.5;
+          if (win) {
+            updateBalance(selectedCoin);
+            alert('You won ' + selectedCoin + ' coins!');
+          } else {
+            document.getElementById('explode').play();
+            updateBalance(-selectedCoin);
+            alert('You lost ' + selectedCoin + ' coins.');
+          }
+          ship.style.bottom = '0';
+        }
+      }, 50);
+    }
+
+    getBalance();
+  </script></body></html>
