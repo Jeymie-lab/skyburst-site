@@ -1,45 +1,25 @@
-body {
-  font-family: Arial, sans-serif;
-  background: #090d2b;
-  color: white;
-  text-align: center;
-  padding: 40px;
-}
+/* style.css */
 
-.container {
-  max-width: 400px;
-  margin: auto;
-  background: #1b1f46;
-  padding: 30px;
-  border-radius: 15px;
-  box-shadow: 0 0 15px rgba(0,0,0,0.6);
-}
+body { margin: 0; font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; background: #0f172a; color: white; overflow: hidden; }
 
-input, button {
-  width: 100%;
-  margin: 10px 0;
-  padding: 12px;
-  border: none;
-  border-radius: 10px;
-  font-size: 16px;
-}
+header { padding: 1rem; text-align: center; background: #1e293b; font-size: 1.5rem; }
 
-button {
-  background: #ff3c83;
-  color: white;
-  cursor: pointer;
-}
+.container { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; height: 100vh; padding-top: 2rem; }
 
-button:hover {
-  background: #ff0066;
-}
+#loginForm, #registerForm, #gameScreen { display: none; flex-direction: column; align-items: center; background: #1e293b; padding: 1.5rem; border-radius: 12px; box-shadow: 0 0 10px rgba(255, 255, 255, 0.1); }
 
-.support-btn {
-  display: inline-block;
-  margin-top: 20px;
-  background: #25d366;
-  padding: 12px;
-  border-radius: 8px;
-  color: white;
-  text-decoration: none;
-}
+input, button { padding: 0.7rem; margin: 0.5rem; border: none; border-radius: 8px; font-size: 1rem; }
+
+button { background: #3b82f6; color: white; cursor: pointer; }
+
+button:hover { background: #2563eb; }
+
+.ship-area { margin: 2rem 0; position: relative; width: 100%; max-width: 400px; height: 200px; background: radial-gradient(circle at center, #1e293b, #0f172a); overflow: hidden; border-radius: 16px; }
+
+.ship { position: absolute; bottom: 20px; left: 50%; width: 60px; height: 60px; transform: translateX(-50%); background: url('https://i.ibb.co/gZWT4bS/spaceship.png') no-repeat center/contain; transition: bottom 1s ease; }
+
+.coin-balance { margin-top: 1rem; font-size: 1.2rem; }
+
+.coin-buttons { display: flex; gap: 0.5rem; margin: 1rem 0; }
+
+.playing-users { font-size: 0.9rem; color: #cbd5e1; margin-top: 1rem; }
