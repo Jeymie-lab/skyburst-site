@@ -1,44 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Register - SkyBurst</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <h2>Register for SkyBurst</h2>
-  <form id="register-form">
-    <input type="text" id="register-username" placeholder="Username" required><br>
-    <input type="password" id="register-password" placeholder="Password" required><br>
-    <button type="submit">Register</button>
-  </form>
-  <p>Already have an account? <a href="index.html">Login here</a></p>
+  <div class="container">
+    <h1>Register</h1>
+    <form id="register-form" class="form">
+      <input type="text" id="register-username" placeholder="Username" required />
+      <input type="password" id="register-password" placeholder="Password" required />
+      <input type="text" id="register-referrer" placeholder="Referrer ID (optional)" />
+      <button type="submit">Register</button>
+    </form>
+    <p>Already have an account? <a href="index.html">Login here</a></p>
+  </div>
 
-  <script type="module">
-    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
-
-    const supabase = createClient(
-      'https://omcaquhsmeqfhxpusawu.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9tY2FxdWhzbWVxZmh4cHVzYXd1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMyMTE2ODIsImV4cCI6MjA2ODc4NzY4Mn0.efl5MQ-lbY6kkeMujJQ8NDTLdc_7r_bkTj_AZzwcj4Y'
-    );
-
-    document.getElementById('register-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const username = document.getElementById('register-username').value;
-      const password = document.getElementById('register-password').value;
-
-      const { data, error } = await supabase
-        .from('skyburst_users')
-        .insert([{ username, password }]);
-
-      if (error) {
-        alert("Registration failed: " + error.message);
-        console.error(error);
-      } else {
-        // Save session and redirect
-        localStorage.setItem('username', username);
-        window.location.href = "game.html";
-      }
-    });
-  </script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
