@@ -3,22 +3,18 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Register - SkyBurst</title>
-  <link rel="stylesheet" href="style.css" />
+  <title>Register</title>
 </head>
 <body>
-  <div class="container">
-    <h1>Register</h1>
-    <form id="register-form" class="form">
-      <input type="text" id="register-username" placeholder="Username" required />
-      <input type="password" id="register-password" placeholder="Password" required />
-      <input type="text" id="register-referrer" placeholder="Referrer ID (optional)" />
-      <button type="submit">Register</button>
-    </form>
-    <p>Already have an account? <a href="index.html">Login here</a></p>
-  </div>
+  <h2>Register</h2>
+  <form id="register-form">
+    <input type="text" id="register-username" placeholder="Username" required /><br>
+    <input type="password" id="register-password" placeholder="Password" required /><br>
+    <input type="text" id="register-referrer" placeholder="Referrer (optional)" /><br>
+    <button type="submit">Register</button>
+  </form>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="script.js"></script>
 </body>
 </html>
