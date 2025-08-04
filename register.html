@@ -3,18 +3,112 @@
 <head>
   <meta charset="UTF-8" />
   <title>SkyBurst Registration</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to bottom, #002f4b, #dc4225);
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px;
+    }
+    form {
+      background: rgba(0, 0, 0, 0.5);
+      padding: 30px;
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      width: 100%;
+      max-width: 350px;
+    }
+    input, button {
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 5px;
+      border: none;
+    }
+    button {
+      background-color: orange;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    h2 {
+      margin-bottom: 20px;
+    }
+  </style>
 </head>
 <body>
-  <h2>Register for SkyBurst</h2>
+  <h2>Register to SkyBurst</h2>
   <form id="register-form">
-    <input type="text" id="register-username" placeholder="Username" required><br>
-    <input type="password" id="register-password" placeholder="Password" required><br>
-    <input type="text" id="register-referrer" placeholder="Referrer ID (optional)"><br>
+    <input type="text" id="register-username" placeholder="Username" required />
+    <input type="password" id="register-password" placeholder="Password" required />
+    <input type="text" id="register-referrer" placeholder="Referral ID (optional)" />
     <button type="submit">Register</button>
   </form>
-  <p>Already have an account? <a href="index.html">Login here</a></p>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="script.js"></script>
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+
+    const supabase = createClient(
+      "https://omcaquhsmeqfhxpusawu.supabase.co",
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9tY2FxdWhzbWVxZmh4cHVzYXd1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMyMTE2ODIsImV4cCI6MjA2ODc4NzY4Mn0.efl5MQ-lbY6kkeMujJQ8NDTLdc_7r_bkTj_AZzwcj4Y"
+    );
+
+    document.getElementById("register-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const username = document.getElementById("register-username").value.trim();
+      const password = document.getElementById("register-password").value.trim();
+      const referrer = document.getElementById("register-referrer").value.trim();
+
+      console.log("Registering:", { username, password, referrer });
+
+      const { data: existingUser, error: checkError } = await supabase
+        .from("skyburst_users")
+        .select("id")
+        .eq("username", username)
+        .maybeSingle();
+
+      if (checkError) {
+        console.error("Error checking user:", checkError.message);
+        return alert("Error checking existing user.");
+      }
+
+      if (existingUser) {
+        alert("Username already exists.");
+        return;
+      }
+
+      const { error: signupError } = await supabase.rpc("handle_user_signup", {
+        username,
+        password,
+        referrer: referrer || null,
+      });
+
+      if (signupError) {
+        console.error("Signup error:", signupError.message);
+        return alert("Failed to register.");
+      }
+
+      const { data: newUser, error: fetchError } = await supabase
+        .from("skyburst_users")
+        .select("*")
+        .eq("username", username)
+        .eq("password", password)
+        .single();
+
+      if (fetchError || !newUser) {
+        console.error("Error fetching user after registration:", fetchError?.message);
+        return alert("Registration succeeded but login failed.");
+      }
+
+      localStorage.setItem("user", JSON.stringify(newUser));
+      window.location.href = "game.html";
+    });
+  </script>
 </body>
 </html>
