@@ -2,20 +2,18 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Register</title>
+  <title>SkyBurst Registration</title>
 </head>
 <body>
-  <h2>Register to SkyBurst</h2>
-
+  <h2>Register for SkyBurst</h2>
   <form id="register-form">
-    <input type="text" id="register-username" placeholder="Username" required /><br>
-    <input type="password" id="register-password" placeholder="Password" required /><br>
-    <input type="text" id="register-referrer" placeholder="Referrer (optional)" /><br>
+    <input type="text" id="register-username" placeholder="Username" required><br>
+    <input type="password" id="register-password" placeholder="Password" required><br>
+    <input type="text" id="register-referrer" placeholder="Referrer ID (optional)"><br>
     <button type="submit">Register</button>
   </form>
+  <p>Already have an account? <a href="index.html">Login here</a></p>
 
-  <!-- ✅ These two scripts must come after the form -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="script.js"></script>
 </body>
