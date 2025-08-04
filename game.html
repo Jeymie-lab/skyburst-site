@@ -1,7 +1,8 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>SkyBurst Game</title>
   <link rel="stylesheet" href="style.css">
 </head>
@@ -15,34 +16,40 @@
         <button id="withdraw-btn">Withdraw</button>
       </div>
     </div>
-  </header>  <main>
-    <div class="game-container">
-      <canvas id="gameCanvas" width="300" height="400"></canvas><div class="cash-panel">
-    <div id="selected-amount">Selected: 0 coins</div>
-    <div class="coin-options">
-      <button class="coin-btn" data-value="10">10</button>
-      <button class="coin-btn" data-value="30">30</button>
-      <button class="coin-btn" data-value="50">50</button>
-      <button class="coin-btn" data-value="100">100</button>
-      <button class="coin-btn" data-value="500">500</button>
-    </div>
-    <div class="action-buttons">
-      <button id="cash-in">Cash In</button>
-      <button id="cash-out">Cash Out</button>
-    </div>
-  </div>
+  </header>
 
-  <aside class="right-panel">
-    <h3>🧑‍🚀 Live Players</h3>
-    <ul id="live-feed">
-      <li>No players yet</li>
-    </ul>
-    <div class="referral-support">
-      <button id="referral-btn">Referral</button>
-      <button id="support-btn">Support</button>
-    </div>
-  </aside>
-</div>
+  <main class="main-layout">
+    <section class="left-panel">
+      <canvas id="gameCanvas" width="350" height="450"></canvas>
 
-  </main>  <script type="module" src="script.js"></script></body>
+      <div id="selected-amount">Selected: 0 coins</div>
+
+      <div class="coin-options">
+        <button class="coin-btn" data-value="10">10</button>
+        <button class="coin-btn" data-value="30">30</button>
+        <button class="coin-btn" data-value="50">50</button>
+        <button class="coin-btn" data-value="100">100</button>
+        <button class="coin-btn" data-value="500">500</button>
+      </div>
+
+      <div class="action-buttons">
+        <button id="cash-in">Cash In</button>
+        <button id="cash-out">Cash Out</button>
+      </div>
+    </section>
+
+    <aside class="right-panel">
+      <h3>🧑‍🚀 Live Players</h3>
+      <ul id="live-feed">
+        <li>No players yet</li>
+      </ul>
+      <div class="referral-support">
+        <button id="referral-btn">Referral</button>
+        <button id="support-btn">Support</button>
+      </div>
+    </aside>
+  </main>
+
+  <script type="module" src="script.js"></script>
+</body>
 </html>
