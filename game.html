@@ -1,56 +1,59 @@
-<!DOCTYPE html>  
-<html lang="en">  
-<head>  
-  <meta charset="UTF-8" />  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>  
-  <title>SkyBurst Game</title>  
-  <link rel="stylesheet" href="style.css">  
-</head>  
-<body>  
-  <header>  
-    <div class="top-bar">  
-      <div class="logo">🚀 SkyBurst</div>  
-      <div class="balance-info">  
-        Balance: <span id="balance">0</span> coins  
-        <button id="recharge-btn">Recharge</button>  
-        <button id="withdraw-btn">Withdraw</button>  
-      </div>  
-    </div>  
-  </header>  
-  
-  <main class="main-layout">  
-    <section class="left-panel">  
-      <canvas id="gameCanvas" width="350" height="450"></canvas>  
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SkyBurst Game</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <div class="top-bar">
+      <div class="logo">🚀 SkyBurst</div>
+      <div class="balance-info">
+        Balance: <span id="balance">0</span> coins
+        <button id="recharge-btn">Recharge</button>
+        <button id="withdraw-btn">Withdraw</button>
+      </div>
+    </div>
+  </header>
 
-      <div id="selected-amount">Selected: 0 coins</div>  
-      <div class="coin-options">  
-        <button class="coin-btn" data-value="10">10</button>  
-        <button class="coin-btn" data-value="30">30</button>  
-        <button class="coin-btn" data-value="50">50</button>  
-        <button class="coin-btn" data-value="100">100</button>  
-        <button class="coin-btn" data-value="500">500</button>  
-      </div>  
-      <div class="action-buttons">  
-        <button id="cash-in">Cash In</button>  
-        <button id="cash-out">Cash Out</button>  
-      </div>  
+  <main class="main-layout" style="display: flex; justify-content: space-between; padding: 10px;">
+    
+    <!-- Live Players (LEFT) -->
+    <aside class="left-panel" style="width: 30%; background-color: #0a0a0a; padding: 10px; border-radius: 10px;">
+      <h3>🧑‍🚀 Live Players</h3>
+      <ul id="live-feed">
+        <li>No players yet</li>
+      </ul>
+      <div class="referral-support">
+        <button id="referral-btn">Referral</button>
+        <button id="support-btn">Support</button>
+      </div>
+    </aside>
 
-      <!-- 🎮 Moved Live Players here -->
-      <div class="live-players">
-        <h3>🧑‍🚀 Live Players</h3>  
-        <ul id="live-feed">  
-          <li>No players yet</li>  
-        </ul>  
+    <!-- Game Engine and Controls (RIGHT) -->
+    <section class="right-panel" style="width: 65%; text-align: center;">
+      <canvas id="gameCanvas" width="350" height="450"></canvas>
+
+      <div id="selected-amount" style="margin: 10px 0;">Selected: 0 coins</div>
+
+      <div class="coin-options">
+        <button class="coin-btn" data-value="10">10</button>
+        <button class="coin-btn" data-value="30">30</button>
+        <button class="coin-btn" data-value="50">50</button>
+        <button class="coin-btn" data-value="100">100</button>
+        <button class="coin-btn" data-value="500">500</button>
       </div>
 
-      <!-- 💬 Referral and Support -->
-      <div class="referral-support">  
-        <button id="referral-btn">Referral</button>  
-        <button id="support-btn">Support</button>  
-      </div>  
-    </section>  
-  </main>  
-  
-  <script type="module" src="script.js"></script>  
-</body>  
+      <div class="action-buttons" style="margin-top: 10px;">
+        <button id="cash-in">Cash In</button>
+        <button id="cash-out">Cash Out</button>
+      </div>
+    </section>
+
+  </main>
+
+  <script type="module" src="script.js"></script>
+</body>
 </html>
