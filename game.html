@@ -1,1 +1,42 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SkyBurst Game</title>
+  <link rel="stylesheet" href="style.css">
+  <script type="module" src="script.js"></script>
+</head>
+<body>
+  <header class="top-bar">
+    <div class="left-info">
+      <span id="balance-display">Balance: 0 coins</span>
+      <button onclick="recharge()">Recharge</button>
+      <button onclick="withdraw()">Withdraw</button>
+    </div>
+    <div class="right-buttons">
+      <button onclick="refer()">Referral</button>
+      <button onclick="support()">Support</button>
+    </div>
+  </header>  <main>
+    <h1>🚀 SkyBurst Game</h1>
+    <div id="selected-amount">Selected: 0 coins</div><canvas id="gameCanvas" width="360" height="500"></canvas>
 
+<div class="coin-selection">
+  <button onclick="selectAmount(10)">10</button>
+  <button onclick="selectAmount(30)">30</button>
+  <button onclick="selectAmount(50)">50</button>
+  <button onclick="selectAmount(100)">100</button>
+  <button onclick="selectAmount(500)">500</button>
+</div>
+
+<div class="action-buttons">
+  <button onclick="cashIn()">Cash In</button>
+  <button onclick="cashOut()">Cash Out</button>
+</div>
+
+  </main>  <aside class="live-feed">
+    <h3>🧑‍🚀 Live Plays</h3>
+    <ul id="live-feed-list"></ul>
+  </aside>
+</body>
+</html>
