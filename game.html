@@ -7,7 +7,7 @@
     body {
       background-color: #111;
       color: #fff;
-      font-family: 'Segoe UI', sans-serif;
+      font-family: Arial, sans-serif;
       margin: 0;
       padding: 20px;
     }
@@ -21,25 +21,18 @@
     }
 
     #balance {
-      font-size: 20px;
+      font-size: 18px;
       color: #0f0;
     }
 
     .top-btn {
-      background-color: #333;
+      background-color: #222;
       color: #0ff;
-      padding: 6px 14px;
+      padding: 6px 12px;
       margin-left: 5px;
       border: 1px solid #0ff;
       border-radius: 8px;
       cursor: pointer;
-      font-size: 14px;
-      transition: background 0.3s ease;
-    }
-
-    .top-btn:hover {
-      background-color: #0ff;
-      color: #000;
     }
 
     .game-area {
@@ -55,10 +48,6 @@
       margin-right: 30px;
     }
 
-    .coin-selection {
-      margin-bottom: 20px;
-    }
-
     .coin-btn {
       background: #0ff;
       color: #000;
@@ -70,8 +59,9 @@
       cursor: pointer;
     }
 
-    .action-btns {
+    #selected-amount {
       margin-top: 10px;
+      color: #0f0;
     }
 
     .action-btns button {
@@ -92,32 +82,29 @@
       background-color: orange;
       color: black;
     }
-
-    #selected-amount {
-      font-size: 18px;
-      color: #0f0;
-    }
   </style>
 </head>
 <body>
   <div class="top-bar">
-    <div id="balance">💰 Balance: 0 coins</div>
+    <div id="balance">💰 Balance: Loading...</div>
     <div>
       <button class="top-btn" id="referral-btn">🎁 Referral</button>
       <button class="top-btn" id="recharge-btn">⚡ Recharge</button>
       <button class="top-btn" id="withdraw-btn">💸 Withdraw</button>
+      <button class="top-btn" onclick="resetSelected()">🔄 Reset Coins</button>
     </div>
   </div>
 
   <div class="game-area">
     <canvas id="gameCanvas" width="400" height="500"></canvas>
     <div>
-      <h2>Select Coin Amount</h2>
-      <div class="coin-selection">
+      <h3>Select Coins</h3>
+      <div>
         <button class="coin-btn" data-value="10">10</button>
         <button class="coin-btn" data-value="20">20</button>
         <button class="coin-btn" data-value="50">50</button>
         <button class="coin-btn" data-value="100">100</button>
+        <button class="coin-btn" data-value="500">500</button>
       </div>
 
       <div id="selected-amount">Selected: 0 coins</div>
@@ -128,54 +115,124 @@
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <script>
+    const SUPABASE_URL = "https://omcaquhsmeqfhxpusawu.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9tY2FxdWhzbWVxZmh4cHVzYXd1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMyMTE2ODIsImV4cCI6MjA2ODc4NzY4Mn0.efl5MQ-lbY6kkeMujJQ8NDTLdc_7r_bkTj_AZzwcj4Y";
     const adminPhone = "0797416633";
     const telegramBotToken = "7859896649:AAE4xWMYhE1wsSVqpbBNUC6MXYA2zqGvgdA";
     const adminTelegramChatID = "6825228721";
 
-    const SUPABASE_URL = "https://fdlspkbeelghpyvmvkyg.supabase.co";
-    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9tY2FxdWhzbWVxZmh4cHVzYXd1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMyMTE2ODIsImV4cCI6MjA2ODc4NzY4Mn0.efl5MQ-lbY6kkeMujJQ8NDTLdc_7r_bkTj_AZzwcj4Y";
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    let userPhone = localStorage.getItem("userPhone");
+    if (!userPhone) {
+      alert("⚠ Please login first.");
+      window.location.href = "register.html";
+    }
+
+    let selectedAmount = 0;
+    let userBalance = 0;
+
+    async function fetchBalance() {
+      const res = await fetch(${SUPABASE_URL}/rest/v1/skyburst_users?phone=eq.${userPhone}, {
+        headers: {
+          apikey: SUPABASE_KEY,
+          Authorization: Bearer ${SUPABASE_KEY},
+        }
+      });
+      const data = await res.json();
+      if (data.length > 0) {
+        userBalance = data[0].coins;
+        document.getElementById("balance").innerText = 💰 Balance: ${userBalance} coins;
+      }
+    }
+
+    async function updateBalance(newBalance) {
+      await fetch(${SUPABASE_URL}/rest/v1/skyburst_users?phone=eq.${userPhone}, {
+        method: "PATCH",
+        headers: {
+          apikey: SUPABASE_KEY,
+          Authorization: Bearer ${SUPABASE_KEY},
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ coins: newBalance })
+      });
+      userBalance = newBalance;
+      document.getElementById("balance").innerText = 💰 Balance: ${userBalance} coins;
+    }
+
+    function resetSelected() {
+      selectedAmount = 0;
+      document.getElementById("selected-amount").innerText = Selected: 0 coins;
+    }
+
+    document.querySelectorAll(".coin-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const value = parseInt(btn.getAttribute("data-value"));
+        selectedAmount += value;
+        document.getElementById("selected-amount").innerText = Selected: ${selectedAmount} coins;
+      });
+    });
+
+    document.getElementById("cash-in").addEventListener("click", async () => {
+      if (selectedAmount <= 0) return alert("⚠ Select an amount first.");
+      if (userBalance < selectedAmount) return alert("❌ Not enough balance.");
+      userBalance -= selectedAmount;
+      await updateBalance(userBalance);
+      startFlight();
+    });
+
+    document.getElementById("cash-out").addEventListener("click", async () => {
+      if (!canCashOut || exploded) return alert("❌ You can’t cash out now.");
+      const earned = selectedAmount * 2;
+      userBalance += earned;
+      await updateBalance(userBalance);
+      alert(🪂 You cashed out and earned ${earned} coins);
+      resetFlight();
+    });
+
+    document.getElementById("referral-btn").addEventListener("click", () => {
+      const link = ${window.location.origin}/register.html?ref=${userPhone};
+      navigator.clipboard.writeText(link).then(() => {
+        alert("🎁 Referral link copied to clipboard!");
+      });
+    });
+
+    document.getElementById("recharge-btn").addEventListener("click", () => {
+      alert(⚡ Send money to: ${adminPhone} then wait for approval.);
+      fetch(https://api.telegram.org/bot${telegramBotToken}/sendMessage, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: adminTelegramChatID,
+          text: 💰 Recharge requested by ${userPhone}. Sent to ${adminPhone}
+        })
+      });
+    });
+
+    document.getElementById("withdraw-btn").addEventListener("click", () => {
+      const amount = prompt("Enter amount to withdraw:");
+      if (!amount || isNaN(amount)) return alert("❌ Invalid amount.");
+      const number = prompt("Enter M-PESA number:");
+      if (!number) return alert("❌ Invalid number.");
+      alert(💸 Withdrawal request of ${amount} KES sent.);
+      fetch(https://api.telegram.org/bot${telegramBotToken}/sendMessage, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: adminTelegramChatID,
+          text: 📤 Withdrawal request:\nUser: ${userPhone}\nAmount: ${amount} KES\nM-PESA: ${number}
+        })
+      });
+    });
+
+    // === GAME LOGIC ===
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
 
     let shipY = 400;
     let speed = 1;
     let flying = false;
     let exploded = false;
     let canCashOut = false;
-    let selectedAmount = 0;
-    let userPhone = localStorage.getItem("userPhone") || "Unknown";
-    let userBalance = 0;
-
-    const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas.getContext("2d");
-
-    async function getUserBalance() {
-      const { data } = await supabase
-        .from("skyburst_users")
-        .select("coins")
-        .eq("phone", userPhone)
-        .single();
-
-      if (data) {
-        userBalance = data.coins;
-        updateBalanceDisplay();
-      }
-    }
-
-    async function updateUserBalance(newBalance) {
-      userBalance = newBalance;
-      updateBalanceDisplay();
-
-      await supabase
-        .from("skyburst_users")
-        .update({ coins: newBalance })
-        .eq("phone", userPhone);
-    }
-
-    function updateBalanceDisplay() {
-      document.getElementById("balance").innerText = 💰 Balance: ${userBalance} coins;
-    }
 
     function drawShip() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -183,6 +240,7 @@
       if (flying && !exploded) {
         ctx.fillStyle = "#fff";
         ctx.fillRect(160, shipY, 20, 40);
+
         ctx.fillStyle = "#f90";
         ctx.beginPath();
         ctx.moveTo(160, shipY + 40);
@@ -201,9 +259,17 @@
       if (!flying && canCashOut) drawParachute();
     }
 
+    function drawParachute() {
+      ctx.fillStyle = "yellow";
+      ctx.beginPath();
+      ctx.arc(170, shipY, 15, 0, Math.PI, true);
+      ctx.fill();
+      ctx.fillStyle = "#000";
+      ctx.fillRect(165, shipY, 10, 20);
+    }
+
     function animateShip() {
       if (!flying || exploded) return;
-
       shipY -= speed;
       speed += 0.2;
       drawShip();
@@ -218,13 +284,13 @@
       }
     }
 
-    function drawParachute() {
-      ctx.fillStyle = "yellow";
-      ctx.beginPath();
-      ctx.arc(170, shipY, 15, 0, Math.PI, true);
-      ctx.fill();
-      ctx.fillStyle = "#000";
-      ctx.fillRect(165, shipY, 10, 20);
+    function startFlight() {
+      flying = true;
+      canCashOut = false;
+      animateShip();
+      setTimeout(() => {
+        if (!exploded) canCashOut = true;
+      }, 3000);
     }
 
     function resetFlight() {
@@ -234,82 +300,12 @@
       canCashOut = false;
       exploded = false;
       selectedAmount = 0;
-      updateSelectedDisplay();
+      document.getElementById("selected-amount").innerText = Selected: 0 coins;
+      drawShip();
     }
 
-    function updateSelectedDisplay() {
-      document.getElementById("selected-amount").innerText = Selected: ${selectedAmount} coins;
-    }
-
-    document.querySelectorAll(".coin-btn").forEach(btn => {
-      btn.addEventListener("click", () => {
-        selectedAmount = parseInt(btn.getAttribute("data-value"));
-        updateSelectedDisplay();
-      });
-    });
-
-    document.getElementById("cash-in").addEventListener("click", async () => {
-      if (flying || selectedAmount <= 0 || selectedAmount > userBalance) return;
-
-      flying = true;
-      canCashOut = false;
-      await updateUserBalance(userBalance - selectedAmount);
-      animateShip();
-
-      setTimeout(() => {
-        if (!exploded) canCashOut = true;
-      }, 3000);
-    });
-
-    document.getElementById("cash-out").addEventListener("click", async () => {
-      if (!canCashOut || exploded) return;
-
-      const winnings = selectedAmount * 2;
-      await updateUserBalance(userBalance + winnings);
-      flying = false;
-      drawParachute();
-      alert(🪂 You cashed out and earned ${winnings} coins);
-      resetFlight();
-    });
-
-    // 🎁 Referral
-    document.getElementById("referral-btn").addEventListener("click", () => {
-      const link = ${window.location.origin}/register.html?ref=${userPhone};
-      navigator.clipboard.writeText(link).then(() => {
-        alert(🎁 Referral link copied:\n${link});
-      });
-    });
-
-    // ⚡ Recharge
-    document.getElementById("recharge-btn").addEventListener("click", () => {
-      alert(⚡ Send money to: ${adminPhone}\nThen wait for admin approval.);
-
-      fetch(https://api.telegram.org/bot${telegramBotToken}/sendMessage, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          chat_id: adminTelegramChatID,
-          text: 💰 Recharge Prompted\nUser: ${userPhone}\nAsked to pay: ${adminPhone}
-        })
-      });
-    });
-
-    // 💸 Withdraw
-    document.getElementById("withdraw-btn").addEventListener("click", async () => {
-      const amount = prompt("Enter amount to withdraw:");
-      if (!amount || isNaN(amount)) return;
-
-      const mpesa = prompt("Enter M-PESA number:");
-      if (!mpesa) return;
-
-      await supabase
-        .from("withdrawals")
-        .insert([{ phone: userPhone, amount: parseInt(amount), mpesa, status: "pending" }]);
-
-      alert("✅ Withdrawal request sent. Admin will approve shortly.");
-    });
-
-    getUserBalance().then(() => drawShip());
+    drawShip();
+    fetchBalance();
   </script>
 </body>
 </html>
