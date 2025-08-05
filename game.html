@@ -116,6 +116,7 @@
   </div>
 
   <script>
+  window.onload = () => {
     const SUPABASE_URL = "https://omcaquhsmeqfhxpusawu.supabase.co";
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9tY2FxdWhzbWVxZmh4cHVzYXd1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMyMTE2ODIsImV4cCI6MjA2ODc4NzY4Mn0.efl5MQ-lbY6kkeMujJQ8NDTLdc_7r_bkTj_AZzwcj4Y";
     const adminPhone = "0797416633";
@@ -126,6 +127,7 @@
     if (!userPhone) {
       alert("⚠ Please login first.");
       window.location.href = "register.html";
+      return;
     }
 
     let selectedAmount = 0;
@@ -306,6 +308,7 @@
 
     drawShip();
     fetchBalance();
+  };
   </script>
 </body>
 </html>
