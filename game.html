@@ -68,15 +68,6 @@
       border: none;
       border-radius: 10px;
       cursor: pointer;
-      transition: transform 0.1s ease, background 0.3s ease;
-    }
-
-    .coin-btn:hover {
-      background: #fff;
-    }
-
-    .coin-btn:active {
-      transform: scale(0.95);
     }
 
     .action-btns {
@@ -90,16 +81,6 @@
       border: none;
       border-radius: 10px;
       cursor: pointer;
-      transition: transform 0.1s ease, opacity 0.3s ease;
-    }
-
-    .action-btns button:active {
-      transform: scale(0.96);
-    }
-
-    .action-btns button:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
     }
 
     #cash-in {
@@ -130,7 +111,6 @@
 
   <div class="game-area">
     <canvas id="gameCanvas" width="400" height="500"></canvas>
-
     <div>
       <h2>Select Coin Amount</h2>
       <div class="coin-selection">
@@ -141,7 +121,6 @@
       </div>
 
       <div id="selected-amount">Selected: 0 coins</div>
-
       <div class="action-btns">
         <button id="cash-in">🚀 Cash In</button>
         <button id="cash-out">🪂 Cash Out</button>
@@ -149,19 +128,15 @@
     </div>
   </div>
 
-  <!-- 🔊 Sound Effects -->
-  <audio id="fly-sound" src="sounds/fly.mp3" preload="auto"></audio>
-  <audio id="explode-sound" src="sounds/explode.mp3" preload="auto"></audio>
-  <audio id="cashout-sound" src="sounds/cashout.mp3" preload="auto"></audio>
-
-  <!-- 🔌 Supabase SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-
   <script>
     const adminPhone = "0797416633";
+    const telegramBotToken = "YOUR_TELEGRAM_BOT_TOKEN"; // << replace
+    const adminTelegramChatID = "YOUR_TELEGRAM_CHAT_ID"; // << replace
+
     const SUPABASE_URL = "https://fdlspkbeelghpyvmvkyg.supabase.co";
-    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZkbHNwa2JlZWxnaHB5dm12a3lnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDEyODAxMTcsImV4cCI6MTczMjgxNjExN30.3kzAhVxVh-yk7qg1JHJ3ikP5q2FRDQ-yhzYPkfbzOUg";
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const SUPABASE_KEY = "your-supabase-key"; // Replace with yours
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     let shipY = 400;
     let speed = 1;
@@ -169,15 +144,14 @@
     let exploded = false;
     let canCashOut = false;
     let selectedAmount = 0;
-    let userPhone = localStorage.getItem("userPhone");
+    let userPhone = localStorage.getItem("userPhone") || "Unknown";
     let userBalance = 0;
 
     const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas?.getContext("2d");
+    const ctx = canvas.getContext("2d");
 
     async function getUserBalance() {
-      if (!userPhone) return;
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from("skyburst_users")
         .select("coins")
         .eq("phone", userPhone)
@@ -209,13 +183,12 @@
       if (flying && !exploded) {
         ctx.fillStyle = "#fff";
         ctx.fillRect(160, shipY, 20, 40);
-        ctx.fillStyle = hsl(${Math.random() * 360}, 100%, 50%);
+        ctx.fillStyle = "#f90";
         ctx.beginPath();
         ctx.moveTo(160, shipY + 40);
-        ctx.lineTo(170, shipY + 60 + Math.random() * 5);
+        ctx.lineTo(170, shipY + 60);
         ctx.lineTo(180, shipY + 40);
         ctx.fill();
-        document.getElementById("fly-sound")?.play();
       }
 
       if (exploded) {
@@ -223,16 +196,14 @@
         ctx.beginPath();
         ctx.arc(170, shipY + 20, 30, 0, Math.PI * 2);
         ctx.fill();
-        document.getElementById("explode-sound")?.play();
       }
 
-      if (!flying && canCashOut) {
-        drawParachute();
-      }
+      if (!flying && canCashOut) drawParachute();
     }
 
     function animateShip() {
       if (!flying || exploded) return;
+
       shipY -= speed;
       speed += 0.2;
       drawShip();
@@ -240,7 +211,7 @@
       if (Math.random() < 0.005) {
         exploded = true;
         drawShip();
-        alert("💥 The ship exploded! You lost your coins.");
+        alert("💥 The ship exploded!");
         resetFlight();
       } else {
         requestAnimationFrame(animateShip);
@@ -268,12 +239,6 @@
 
     function updateSelectedDisplay() {
       document.getElementById("selected-amount").innerText = Selected: ${selectedAmount} coins;
-      updateButtonStates();
-    }
-
-    function updateButtonStates() {
-      document.getElementById("cash-in").disabled = flying || selectedAmount <= 0 || selectedAmount > userBalance;
-      document.getElementById("cash-out").disabled = !canCashOut || exploded || !flying;
     }
 
     document.querySelectorAll(".coin-btn").forEach(btn => {
@@ -283,7 +248,7 @@
       });
     });
 
-    document.getElementById("cash-in")?.addEventListener("click", async () => {
+    document.getElementById("cash-in").addEventListener("click", async () => {
       if (flying || selectedAmount <= 0 || selectedAmount > userBalance) return;
 
       flying = true;
@@ -293,24 +258,21 @@
 
       setTimeout(() => {
         if (!exploded) canCashOut = true;
-        updateButtonStates();
       }, 3000);
     });
 
-    document.getElementById("cash-out")?.addEventListener("click", async () => {
+    document.getElementById("cash-out").addEventListener("click", async () => {
       if (!canCashOut || exploded) return;
 
       const winnings = selectedAmount * 2;
       await updateUserBalance(userBalance + winnings);
-
       flying = false;
       drawParachute();
-      document.getElementById("cashout-sound")?.play();
       alert(🪂 You cashed out and earned ${winnings} coins);
       resetFlight();
     });
 
-    // 🔗 Referral button
+    // 🎁 Referral
     document.getElementById("referral-btn").addEventListener("click", () => {
       const link = ${window.location.origin}/register.html?ref=${userPhone};
       navigator.clipboard.writeText(link).then(() => {
@@ -318,33 +280,36 @@
       });
     });
 
-    // 💵 Recharge button
+    // ⚡ Recharge (with Telegram notification)
     document.getElementById("recharge-btn").addEventListener("click", () => {
-      alert(⚡ Send money to: ${adminPhone}\nThen wait for admin to approve and credit your coins.);
+      alert(⚡ Send money to: ${adminPhone}\nThen wait for admin approval.);
+
+      fetch(https://api.telegram.org/bot${telegramBotToken}/sendMessage, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: adminTelegramChatID,
+          text: 💰 Recharge Prompted\nUser: ${userPhone}\nAsked to pay: ${adminPhone}
+        })
+      });
     });
 
-    // 💸 Withdraw button
+    // 💸 Withdraw
     document.getElementById("withdraw-btn").addEventListener("click", async () => {
       const amount = prompt("Enter amount to withdraw:");
-      if (!amount || isNaN(amount) || parseInt(amount) <= 0) return alert("Invalid amount.");
-      const number = prompt("Enter your M-PESA number:");
-      if (!number || number.length < 9) return alert("Invalid phone number.");
+      if (!amount || isNaN(amount)) return;
 
-      const { error } = await supabase
+      const mpesa = prompt("Enter M-PESA number:");
+      if (!mpesa) return;
+
+      await supabase
         .from("withdrawals")
-        .insert([{ phone: userPhone, amount: parseInt(amount), mpesa: number, status: "pending" }]);
+        .insert([{ phone: userPhone, amount: parseInt(amount), mpesa, status: "pending" }]);
 
-      if (error) {
-        alert("❌ Error submitting withdrawal request.");
-      } else {
-        alert("✅ Withdrawal request submitted. Admin will approve soon.");
-      }
+      alert("✅ Withdrawal request sent. Admin will approve shortly.");
     });
 
-    getUserBalance().then(() => {
-      if (ctx) drawShip();
-      updateButtonStates();
-    });
+    getUserBalance().then(() => drawShip());
   </script>
 </body>
 </html>
