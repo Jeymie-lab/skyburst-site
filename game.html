@@ -131,11 +131,11 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <script>
     const adminPhone = "0797416633";
-    const telegramBotToken = "YOUR_TELEGRAM_BOT_TOKEN"; // << replace
-    const adminTelegramChatID = "YOUR_TELEGRAM_CHAT_ID"; // << replace
+    const telegramBotToken = "7859896649:AAE4xWMYhE1wsSVqpbBNUC6MXYA2zqGvgdA";
+    const adminTelegramChatID = "6825228721";
 
     const SUPABASE_URL = "https://fdlspkbeelghpyvmvkyg.supabase.co";
-    const SUPABASE_KEY = "your-supabase-key"; // Replace with yours
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9tY2FxdWhzbWVxZmh4cHVzYXd1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMyMTE2ODIsImV4cCI6MjA2ODc4NzY4Mn0.efl5MQ-lbY6kkeMujJQ8NDTLdc_7r_bkTj_AZzwcj4Y";
     const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     let shipY = 400;
@@ -280,7 +280,7 @@
       });
     });
 
-    // ⚡ Recharge (with Telegram notification)
+    // ⚡ Recharge
     document.getElementById("recharge-btn").addEventListener("click", () => {
       alert(⚡ Send money to: ${adminPhone}\nThen wait for admin approval.);
 
