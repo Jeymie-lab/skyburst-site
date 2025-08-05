@@ -1,59 +1,301 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
   <title>SkyBurst Game</title>
-  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      background-color: #111;
+      color: #fff;
+      font-family: 'Segoe UI', sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
+
+    h1 {
+      margin-top: 20px;
+      color: #0ff;
+    }
+
+    #gameCanvas {
+      background-color: #222;
+      margin-top: 20px;
+      border: 2px solid #555;
+    }
+
+    .coin-selection {
+      margin: 20px;
+    }
+
+    .coin-btn {
+      background: #0ff;
+      color: #000;
+      font-weight: bold;
+      padding: 10px 20px;
+      margin: 5px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: transform 0.1s ease, background 0.3s ease;
+    }
+
+    .coin-btn:hover {
+      background: #fff;
+    }
+
+    .coin-btn:active {
+      transform: scale(0.95);
+    }
+
+    .action-btns {
+      margin: 20px;
+    }
+
+    .action-btns button {
+      padding: 10px 30px;
+      margin: 10px;
+      font-size: 16px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: transform 0.1s ease, opacity 0.3s ease;
+    }
+
+    .action-btns button:active {
+      transform: scale(0.96);
+    }
+
+    .action-btns button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    #cash-in {
+      background-color: green;
+      color: white;
+    }
+
+    #cash-out {
+      background-color: orange;
+      color: black;
+    }
+
+    #selected-amount {
+      font-size: 18px;
+      margin-top: 10px;
+      color: #0f0;
+    }
+
+    #balance {
+      font-size: 18px;
+      color: #0f0;
+      margin-top: 10px;
+    }
+  </style>
 </head>
 <body>
-  <header>
-    <div class="top-bar">
-      <div class="logo">🚀 SkyBurst</div>
-      <div class="balance-info">
-        Balance: <span id="balance">0</span> coins
-        <button id="recharge-btn">Recharge</button>
-        <button id="withdraw-btn">Withdraw</button>
-      </div>
-    </div>
-  </header>
+  <h1>🚀 SkyBurst Game</h1>
 
-  <main class="main-layout" style="display: flex; justify-content: space-between; padding: 10px;">
-    
-    <!-- Live Players (LEFT) -->
-    <aside class="left-panel" style="width: 30%; background-color: #0a0a0a; padding: 10px; border-radius: 10px;">
-      <h3>🧑‍🚀 Live Players</h3>
-      <ul id="live-feed">
-        <li>No players yet</li>
-      </ul>
-      <div class="referral-support">
-        <button id="referral-btn">Referral</button>
-        <button id="support-btn">Support</button>
-      </div>
-    </aside>
+  <canvas id="gameCanvas" width="400" height="500"></canvas>
 
-    <!-- Game Engine and Controls (RIGHT) -->
-    <section class="right-panel" style="width: 65%; text-align: center;">
-      <canvas id="gameCanvas" width="350" height="450"></canvas>
+  <div id="balance">💰 Balance: 0 coins</div>
 
-      <div id="selected-amount" style="margin: 10px 0;">Selected: 0 coins</div>
+  <div class="coin-selection">
+    <h2>Select Coin Amount</h2>
+    <button class="coin-btn" data-value="10">10</button>
+    <button class="coin-btn" data-value="20">20</button>
+    <button class="coin-btn" data-value="50">50</button>
+    <button class="coin-btn" data-value="100">100</button>
+    <div id="selected-amount">Selected: 0 coins</div>
+  </div>
 
-      <div class="coin-options">
-        <button class="coin-btn" data-value="10">10</button>
-        <button class="coin-btn" data-value="30">30</button>
-        <button class="coin-btn" data-value="50">50</button>
-        <button class="coin-btn" data-value="100">100</button>
-        <button class="coin-btn" data-value="500">500</button>
-      </div>
+  <div class="action-btns">
+    <button id="cash-in">🚀 Cash In</button>
+    <button id="cash-out">🪂 Cash Out</button>
+  </div>
 
-      <div class="action-buttons" style="margin-top: 10px;">
-        <button id="cash-in">Cash In</button>
-        <button id="cash-out">Cash Out</button>
-      </div>
-    </section>
+  <!-- 🔊 Sound Effects -->
+  <audio id="fly-sound" src="sounds/fly.mp3" preload="auto"></audio>
+  <audio id="explode-sound" src="sounds/explode.mp3" preload="auto"></audio>
+  <audio id="cashout-sound" src="sounds/cashout.mp3" preload="auto"></audio>
 
-  </main>
+  <!-- 🔌 Supabase SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
-  <script type="module" src="script.js"></script>
+  <!-- 🎮 Game Script -->
+  <script>
+    if (window.location.pathname.endsWith("game.html")) {
+      let shipY = 400;
+      let speed = 1;
+      let flying = false;
+      let exploded = false;
+      let canCashOut = false;
+      let selectedAmount = 0;
+      let userPhone = localStorage.getItem("userPhone");
+      let userBalance = 0;
+
+      const SUPABASE_URL = "https://fdlspkbeelghpyvmvkyg.supabase.co";
+      const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZkbHNwa2JlZWxnaHB5dm12a3lnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDEyODAxMTcsImV4cCI6MTczMjgxNjExN30.3kzAhVxVh-yk7qg1JHJ3ikP5q2FRDQ-yhzYPkfbzOUg";
+      const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+      const canvas = document.getElementById("gameCanvas");
+      const ctx = canvas?.getContext("2d");
+
+      async function getUserBalance() {
+        if (!userPhone) return;
+        const { data, error } = await supabase
+          .from("skyburst_users")
+          .select("coins")
+          .eq("phone", userPhone)
+          .single();
+
+        if (data) {
+          userBalance = data.coins;
+          updateBalanceDisplay();
+        }
+      }
+
+      async function updateUserBalance(newBalance) {
+        userBalance = newBalance;
+        updateBalanceDisplay();
+
+        await supabase
+          .from("skyburst_users")
+          .update({ coins: newBalance })
+          .eq("phone", userPhone);
+      }
+
+      function updateBalanceDisplay() {
+        const balanceEl = document.getElementById("balance");
+        if (balanceEl) balanceEl.innerText = 💰 Balance: ${userBalance} coins;
+      }
+
+      function drawShip() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        if (flying && !exploded) {
+          ctx.fillStyle = "#fff";
+          ctx.fillRect(160, shipY, 20, 40);
+
+          ctx.fillStyle = hsl(${Math.random() * 360}, 100%, 50%);
+          ctx.beginPath();
+          ctx.moveTo(160, shipY + 40);
+          ctx.lineTo(170, shipY + 60 + Math.random() * 5);
+          ctx.lineTo(180, shipY + 40);
+          ctx.fill();
+
+          document.getElementById("fly-sound")?.play();
+        }
+
+        if (exploded) {
+          ctx.fillStyle = "red";
+          ctx.beginPath();
+          ctx.arc(170, shipY + 20, 30, 0, Math.PI * 2);
+          ctx.fill();
+          document.getElementById("explode-sound")?.play();
+        }
+
+        if (!flying && canCashOut) {
+          drawParachute();
+        }
+      }
+
+      function animateShip() {
+        if (!flying || exploded) return;
+        shipY -= speed;
+        speed += 0.2;
+        drawShip();
+
+        if (Math.random() < 0.005) {
+          exploded = true;
+          drawShip();
+          alert("💥 The ship exploded! You lost your coins.");
+          resetFlight();
+        } else {
+          requestAnimationFrame(animateShip);
+        }
+      }
+
+      function drawParachute() {
+        ctx.fillStyle = "yellow";
+        ctx.beginPath();
+        ctx.arc(170, shipY, 15, 0, Math.PI, true);
+        ctx.fill();
+        ctx.fillStyle = "#000";
+        ctx.fillRect(165, shipY, 10, 20);
+      }
+
+      function resetFlight() {
+        shipY = 400;
+        speed = 1;
+        flying = false;
+        canCashOut = false;
+        exploded = false;
+        selectedAmount = 0;
+        updateSelectedDisplay();
+      }
+
+      function updateSelectedDisplay() {
+        const selectedDisplay = document.getElementById("selected-amount");
+        if (selectedDisplay) {
+          selectedDisplay.innerText = Selected: ${selectedAmount} coins;
+        }
+        updateButtonStates();
+      }
+
+      function updateButtonStates() {
+        const cashInBtn = document.getElementById("cash-in");
+        const cashOutBtn = document.getElementById("cash-out");
+
+        if (cashInBtn) {
+          cashInBtn.disabled = flying || selectedAmount <= 0 || selectedAmount > userBalance;
+        }
+
+        if (cashOutBtn) {
+          cashOutBtn.disabled = !canCashOut || exploded || !flying;
+        }
+      }
+
+      document.querySelectorAll(".coin-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          selectedAmount = parseInt(btn.getAttribute("data-value"));
+          updateSelectedDisplay();
+        });
+      });
+
+      document.getElementById("cash-in")?.addEventListener("click", async () => {
+        if (flying || selectedAmount <= 0 || selectedAmount > userBalance) return;
+
+        flying = true;
+        canCashOut = false;
+        await updateUserBalance(userBalance - selectedAmount);
+        animateShip();
+
+        setTimeout(() => {
+          if (!exploded) canCashOut = true;
+          updateButtonStates();
+        }, 3000);
+      });
+
+      document.getElementById("cash-out")?.addEventListener("click", async () => {
+        if (!canCashOut || exploded) return;
+
+        const winnings = selectedAmount * 2;
+        await updateUserBalance(userBalance + winnings);
+
+        flying = false;
+        drawParachute();
+        document.getElementById("cashout-sound")?.play();
+        alert(🪂 You cashed out and earned ${winnings} coins);
+        resetFlight();
+      });
+
+      getUserBalance().then(() => {
+        if (ctx) drawShip();
+        updateButtonStates();
+      });
+    }
+  </script>
 </body>
 </html>
